@@ -1,0 +1,2651 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark" data-accent="teal">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACS HUB — Rapot Digital ACS Banjarnegara</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+/* ============ SISTEM TEMA (dari mockup, disetujui Ndaru 15 Nov 2026) ============ */
+:root{
+  --font-body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --radius:16px; --radius-sm:10px;
+  --shadow:0 10px 30px rgba(0,0,0,.18);
+}
+html[data-theme="light"]{
+  --bg:#eef3f3; --bg-2:#e2ebeb; --surface:#ffffff; --surface-2:#f4f8f8;
+  --ink:#0d2126; --ink-2:#47616a; --ink-3:#7d939c; --line:#d8e3e5;
+  --accent:#0e7c86; --accent-2:#0a5d66; --accent-soft:rgba(14,124,134,.10);
+  --danger:#c0392b; --danger-soft:rgba(192,57,43,.10);
+  --amber:#b45309; --amber-soft:rgba(180,83,9,.10);
+  --green:#15803d; --green-soft:rgba(21,128,61,.10);
+  --blue:#1d4ed8; --blue-soft:rgba(29,78,216,.10);
+  --hero-1:#0e7c86; --hero-2:#0a5d66;
+}
+html[data-theme="dark"]{
+  --bg:#0a1518; --bg-2:#0e1d21; --surface:#122329; --surface-2:#0f1f24;
+  --ink:#e9f3f4; --ink-2:#a7bfc6; --ink-3:#6f8a93; --line:#22393f;
+  --accent:#2ba3ae; --accent-2:#0e7c86; --accent-soft:rgba(43,163,174,.14);
+  --danger:#ef6a5e; --danger-soft:rgba(239,106,94,.14);
+  --amber:#f5a623; --amber-soft:rgba(245,166,35,.14);
+  --green:#34d399; --green-soft:rgba(52,211,153,.14);
+  --blue:#60a5fa; --blue-soft:rgba(96,165,250,.14);
+  --hero-1:#123f45; --hero-2:#0e7c86;
+}
+/* Aksen (5) — berlaku untuk light & dark */
+html[data-accent="teal"]{ --accent:#0e7c86; --accent-2:#0a5d66; }
+html[data-theme="dark"][data-accent="teal"]{ --accent:#2ba3ae; --accent-2:#0e7c86; }
+html[data-accent="biru"]{ --accent:#2470c9; --accent-2:#1a56a0; }
+html[data-theme="dark"][data-accent="biru"]{ --accent:#4d8fdd; --accent-2:#2470c9; }
+html[data-accent="senja"]{ --accent:#dd6318; --accent-2:#b44d0e; }
+html[data-theme="dark"][data-accent="senja"]{ --accent:#ec7f37; --accent-2:#c25a12; }
+html[data-accent="bata"]{ --accent:#bc4230; --accent-2:#963325; }
+html[data-theme="dark"][data-accent="bata"]{ --accent:#d95f4b; --accent-2:#b03e2b; }
+html[data-accent="lumut"]{ --accent:#4c7a45; --accent-2:#3a6134; }
+html[data-theme="dark"][data-accent="lumut"]{ --accent:#74a568; --accent-2:#4c7a45; }
+html[data-accent="teal"]{ --accent-soft:color-mix(in srgb,var(--accent) 12%,transparent); }
+html[data-accent="biru"]{ --accent-soft:color-mix(in srgb,var(--accent) 12%,transparent); }
+html[data-accent="senja"]{ --accent-soft:color-mix(in srgb,var(--accent) 12%,transparent); }
+html[data-accent="bata"]{ --accent-soft:color-mix(in srgb,var(--accent) 12%,transparent); }
+html[data-accent="lumut"]{ --accent-soft:color-mix(in srgb,var(--accent) 12%,transparent); }
+
+/* ============ DASAR ============ */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;line-height:1.25}
+p{margin:0}
+a{color:var(--accent);text-decoration:none}
+button{font-family:var(--font-body);cursor:pointer}
+input,select,textarea{font-family:var(--font-body);font-size:14px;color:var(--ink)}
+img{max-width:100%}
+.mono{font-family:var(--font-mono)}
+.muted{color:var(--ink-2)}
+.small{font-size:12px}
+.hidden{display:none!important}
+[hidden]{display:none!important}
+
+/* ============ SHELL APLIKASI ============ */
+.app{display:flex;min-height:100vh}
+.side{width:236px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.brand-mark{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--hero-1),var(--hero-2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0}
+.brand b{font-size:16px;display:block;line-height:1.2}
+.brand span{font-size:11px;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase}
+.side-cat{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:12px 10px 6px}
+.side-link{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:9px 10px;color:var(--ink-2);font-size:14px;font-weight:600}
+.side-link svg{width:18px;height:18px;flex-shrink:0}
+.side-link:hover{background:var(--surface-2);color:var(--ink)}
+.side-link.active{background:var(--accent-soft);color:var(--accent)}
+.side-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.main{flex:1;min-width:0;padding:22px 26px 96px}
+.topbar{display:none;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.topbar .brand-mark{width:34px;height:34px;font-size:15px}
+.topbar b{font-size:15px}
+.topbar .spacer{flex:1}
+.view{max-width:1060px;margin:0 auto}
+.phead{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.phead .grow{flex:1;min-width:200px}
+.phead h1{font-size:24px;font-weight:800}
+.phead p{color:var(--ink-2);font-size:13px;margin-top:3px}
+.phead .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ============ KOMPONEN ============ */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.card h3{font-size:15px;font-weight:800;margin-bottom:4px}
+.card .sub{font-size:12px;color:var(--ink-2);margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.stat .lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.stat .val{font-size:24px;font-weight:800;margin-top:4px;font-family:var(--font-mono)}
+.stat .note{font-size:12px;color:var(--ink-2);margin-top:2px}
+.tile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;text-align:left;display:flex;flex-direction:column;gap:8px;color:var(--ink)}
+.tile:hover{border-color:var(--accent);box-shadow:var(--shadow)}
+.tile .ic{width:40px;height:40px}
+.tile b{font-size:14px}
+.tile span{font-size:12px;color:var(--ink-2)}
+.ic{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);flex-shrink:0}
+.ic svg{width:20px;height:20px}
+.ic.gold{background:rgba(245,166,35,.16);color:#f5a623}
+.ic.rose{background:var(--danger-soft);color:var(--danger)}
+.ic.green{background:var(--green-soft);color:var(--green)}
+.ic.blue{background:var(--blue-soft);color:var(--blue)}
+.ic.amber{background:var(--amber-soft);color:var(--amber)}
+.ic.lg{width:48px;height:48px;border-radius:12px}
+.ic.lg svg{width:26px;height:26px}
+.ic.sm{width:26px;height:26px;border-radius:8px}
+.ic.sm svg{width:14px;height:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;font-weight:700;padding:9px 14px}
+.btn:hover{border-color:var(--accent)}
+.btn svg{width:15px;height:15px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-2)}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 10px;font-size:12px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.input,select.input,textarea.input{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+label.lbl{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:5px}
+.field{margin-bottom:12px}
+.searchbar{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.searchbar svg{width:17px;height:17px;color:var(--ink-3);flex-shrink:0}
+.searchbar input{border:0;outline:none;background:none;flex:1;font-size:14px;color:var(--ink)}
+.fchip{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700}
+.fchip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:700;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2)}
+.pill.ok{background:var(--green-soft);border-color:transparent;color:var(--green)}
+.pill.wait{background:var(--amber-soft);border-color:transparent;color:var(--amber)}
+.pill.info{background:var(--blue-soft);border-color:transparent;color:var(--blue)}
+.pill.danger{background:var(--danger-soft);border-color:transparent;color:var(--danger)}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;color:var(--ink-2)}
+.seg button.active{background:var(--surface);color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.swatch{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+.swatch.active{border-color:var(--ink);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);padding:8px 10px;border-bottom:1px solid var(--line)}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:var(--surface-2)}
+.tbl-wrap{overflow-x:auto;margin:0 -6px;padding:0 6px}
+.athlete-row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:8px;cursor:pointer}
+.athlete-row:hover{border-color:var(--accent)}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--hero-1),var(--hero-2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar.sm{width:32px;height:32px;font-size:12px}
+.avatar.lg{width:88px;height:88px;font-size:30px;border-radius:20px}
+.pb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.pb{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.pb .no{font-size:12px;font-weight:700;color:var(--ink-2)}
+.pb .tm{font-size:19px;font-weight:800;font-family:var(--font-mono);margin-top:3px;color:var(--accent)}
+.podium{display:flex;align-items:flex-end;gap:10px;justify-content:center;margin:8px 0 4px}
+.pod{flex:1;max-width:220px;text-align:center;background:var(--surface-2);border:1px solid var(--line);border-radius:14px 14px 0 0;padding:14px 10px 10px}
+.pod.first{background:var(--amber-soft);border-color:var(--amber);padding-top:22px}
+.pod .medal{font-size:22px;font-weight:800;font-family:var(--font-mono)}
+.pod .nm{font-weight:800;font-size:13px;margin-top:4px}
+.pod .tm{font-family:var(--font-mono);font-weight:700;color:var(--accent);font-size:14px}
+.pod .ku{font-size:11px;color:var(--ink-2)}
+.m1{color:#d4a017}.m2{color:#9aa5b1}.m3{color:#b0703c}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cat{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer}
+.cat:hover{border-color:var(--accent)}
+.cat b{font-size:13px}
+.cat span{display:block;font-size:12px;color:var(--ink-2);margin-top:2px}
+.bar-row{display:grid;grid-template-columns:110px 1fr 64px;gap:10px;align-items:center;font-size:12px;margin-bottom:8px}
+.bar-track{height:8px;border-radius:99px;background:var(--bg-2);overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:var(--accent)}
+.chart-box{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:12px;text-align:center}
+.cal .dow{font-weight:700;color:var(--ink-3);font-size:11px;padding:4px 0}
+.cal .day{padding:8px 0;border-radius:8px}
+.cal .day.on{background:var(--accent);color:#fff;font-weight:700}
+.flow{display:flex;flex-direction:column}
+.step{display:flex;gap:12px;position:relative;padding-bottom:18px}
+.step:before{content:"";position:absolute;left:15px;top:32px;bottom:0;width:2px;background:var(--line)}
+.step:last-child:before{display:none}
+.step .dot{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;z-index:1}
+.step.done .dot{background:var(--accent);color:#fff}
+.timer-face{font-family:var(--font-mono);font-size:34px;font-weight:700;text-align:center;padding:14px 0;letter-spacing:.02em}
+.a3{border:2px dashed var(--line);border-radius:12px;padding:16px;background:var(--surface-2)}
+.hero{background:linear-gradient(135deg,var(--hero-1),var(--hero-2));border-radius:var(--radius);padding:22px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.14) 1px,transparent 1px);background-size:18px 18px;pointer-events:none}
+.hero h2{font-size:21px;position:relative;z-index:1}
+.hero p{opacity:.9;font-size:13px;margin-top:4px;position:relative;z-index:1}
+.hero .btn{position:relative;z-index:1;margin-top:12px;background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35);color:#fff}
+.act{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;align-items:flex-start}
+.act:last-child{border-bottom:0}
+.act .ic{width:30px;height:30px}
+.act .ic svg{width:16px;height:16px}
+.bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));grid-template-columns:repeat(5,1fr)}
+.bottomnav button{border:0;background:none;color:var(--ink-2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0}
+.bottomnav button svg{width:21px;height:21px}
+.bottomnav button.active{color:var(--accent)}
+.fab{position:fixed;right:18px;bottom:76px;z-index:35;width:54px;height:54px;border-radius:50%;background:var(--accent);color:#fff;border:0;box-shadow:var(--shadow);display:none;align-items:center;justify-content:center}
+.fab svg{width:24px;height:24px}
+.fab-menu{position:fixed;right:18px;bottom:140px;z-index:35;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:6px;min-width:210px}
+.fab-menu button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:9px 10px;border-radius:9px;font-size:13px;font-weight:600;color:var(--ink);text-align:left}
+.fab-menu button:hover{background:var(--surface-2)}
+.fab-menu svg{width:17px;height:17px;color:var(--accent)}
+/* Modal */
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:24px 14px;overflow-y:auto}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:18px;width:100%;max-width:560px;padding:20px;box-shadow:var(--shadow);margin:auto 0}
+.modal.wide{max-width:860px}
+.modal h3{font-size:17px;font-weight:800}
+.modal .m-sub{font-size:13px;color:var(--ink-2);margin:4px 0 14px}
+.modal .m-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.modal .m-close{position:absolute}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.x-btn{border:0;background:var(--surface-2);border-radius:8px;width:30px;height:30px;font-size:16px;color:var(--ink-2);flex-shrink:0}
+/* Loader + toast + alert */
+.loader-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;display:flex;align-items:center;justify-content:center;padding:16px}
+.loader-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 26px;text-align:center;max-width:340px;box-shadow:var(--shadow)}
+.spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:spin 0.9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;z-index:90;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow);max-width:90vw;text-align:center}
+/* Login */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,var(--hero-1),var(--bg) 65%)}
+.login-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px;width:100%;max-width:400px;box-shadow:var(--shadow)}
+.login-card .brand-mark{width:54px;height:54px;font-size:22px;border-radius:14px}
+.empty{padding:26px 10px;text-align:center;color:var(--ink-3);font-size:13px;font-style:italic}
+.badge-role{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:800;border:1px solid var(--line)}
+.badge-role.coach{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.badge-role.wali{background:var(--blue-soft);color:var(--blue);border-color:transparent}
+.progress{height:8px;border-radius:99px;background:var(--bg-2);overflow:hidden}
+.progress>i{display:block;height:100%;background:var(--accent);border-radius:99px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+input[type=file]{font-size:13px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tabs button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700}
+.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:13px}
+.kv dt{color:var(--ink-2)}
+.kv dd{margin:0;font-weight:600}
+@media (max-width:980px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .tile-grid{grid-template-columns:repeat(2,1fr)}
+  .pb-grid{grid-template-columns:repeat(2,1fr)}
+  .cat-grid{grid-template-columns:repeat(2,1fr)}
+  .grid3{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+}
+@media (max-width:860px){
+  .side{display:none}
+  .topbar{display:flex}
+  .main{padding:16px 14px 96px}
+  .bottomnav{display:grid}
+  .fab{display:flex}
+  .phead h1{font-size:20px}
+}
+@media (max-width:460px){
+  .tile-grid{grid-template-columns:repeat(2,1fr)}
+  .pb-grid{grid-template-columns:repeat(2,1fr)}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<!-- ============ LOGIN ============ -->
+<div id="loginWrap" class="login-wrap" hidden>
+  <div class="login-card">
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:6px">
+      <div class="brand-mark">ACS</div>
+      <div><b style="font-size:18px">ACS HUB</b><br><span class="small muted">Rapot Digital · ACS Banjarnegara</span></div>
+    </div>
+    <p class="small muted" style="margin:10px 0 18px">Masuk dengan akun pelatih atau wali atlet.</p>
+    <div class="field"><label class="lbl" for="loginUsername">Username</label><input id="loginUsername" class="input" autocomplete="username" placeholder="cth: CoachACS atau nama panggilan"></div>
+    <div class="field"><label class="lbl" for="loginPassword">Password</label><input id="loginPassword" type="password" class="input" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')prosesAuthentikasi()"></div>
+    <button class="btn primary" style="width:100%;padding:12px" onclick="prosesAuthentikasi()">Masuk</button>
+    <p class="small muted" style="margin-top:14px;text-align:center">Lupa password? Hubungi pelatih ACS.</p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="appWrap" class="app" hidden>
+  <aside class="side">
+    <div class="brand"><div class="brand-mark">ACS</div><div><b>ACS HUB</b><span>Rapot Digital</span></div></div>
+    <div class="side-cat">Menu Utama</div>
+    <button class="side-link" data-nav="dashboard" onclick="navKe('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</button>
+    <button class="side-link" data-nav="atlet" onclick="navKe('atlet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>Data Atlet</button>
+    <button class="side-link" data-nav="hof" onclick="navKe('hof')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v6a5 5 0 0 1-10 0V4zM7 6H4a1 1 0 0 0-1 1c0 2 1.5 3.5 4 3.5M17 6h3a1 1 0 0 1 1 1c0 2-1.5 3.5-4 3.5"/></svg>Hall of Fame</button>
+    <div class="side-cat">Kegiatan</div>
+    <button class="side-link" data-nav="presensi" onclick="navKe('presensi')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 9h18M9 15l2 2 4-4"/></svg>Presensi</button>
+    <button class="side-link" data-nav="spp" onclick="navKe('spp')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>SPP</button>
+    <button class="side-link" data-nav="lomba" onclick="navKe('lomba')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17M5 21h14M9 7h6"/></svg>Pendaftaran Lomba</button>
+    <button class="side-link" data-nav="input" onclick="navKe('input')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>Input Waktu</button>
+    <button class="side-link" onclick="bukaViewerBukuAcara()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13zM4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>Buku Acara</button>
+    <div class="side-cat">Lainnya</div>
+    <button class="side-link" onclick="bukaSettings()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.23.6.83 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>Pengaturan</button>
+    <button class="side-link" onclick="prosesLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button>
+    <div class="side-foot">
+      <div id="badgeAkses" class="badge-role coach">PELATIH</div>
+      <div class="small muted" id="txtUserAktif">—</div>
+      <div>
+        <div class="small muted" style="margin-bottom:6px">Tema</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button class="btn sm ghost" id="btnModeTema" onclick="toggleModeTema()">🌙 Gelap</button>
+          <button class="swatch" data-accent="teal" style="background:#0e7c86" title="Teal" onclick="setAksen('teal')"></button>
+          <button class="swatch" data-accent="biru" style="background:#2470c9" title="Biru" onclick="setAksen('biru')"></button>
+          <button class="swatch" data-accent="senja" style="background:#dd6318" title="Senja" onclick="setAksen('senja')"></button>
+          <button class="swatch" data-accent="bata" style="background:#bc4230" title="Bata" onclick="setAksen('bata')"></button>
+          <button class="swatch" data-accent="lumut" style="background:#4c7a45" title="Lumut" onclick="setAksen('lumut')"></button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="brand-mark">ACS</div><b>ACS HUB</b>
+      <span class="spacer"></span>
+      <span id="badgeAksesTop" class="badge-role coach">PELATIH</span>
+      <button class="btn sm ghost" onclick="bukaSettings()">⚙️</button>
+      <button class="btn sm ghost" onclick="prosesLogout()">Keluar</button>
+    </div>
+
+    <!-- ===== VIEW: DASHBOARD ===== -->
+    <section class="view" id="view-dashboard">
+      <div class="hero">
+        <h2 id="txtSapaan">Selamat datang di ACS HUB</h2>
+        <p id="txtHeroSub">Rapot digital klub renang ACS Banjarnegara — pantau progres, presensi, dan SPP atlet dalam satu tempat.</p>
+        <button class="btn hanya-pelatih" onclick="bukaModalRegistrasi()">+ Daftarkan Atlet Baru</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="lbl">Total Atlet</div><div class="val" id="statTotalAtlet">—</div><div class="note">terdaftar di klub</div></div>
+        <div class="stat"><div class="lbl">Atlet Ber-PB</div><div class="val" id="statAtletPb">—</div><div class="note">punya catatan waktu</div></div>
+        <div class="stat"><div class="lbl">Total PB Tercatat</div><div class="val" id="statTotalPb">—</div><div class="note">semua nomor &amp; gaya</div></div>
+        <div class="stat"><div class="lbl">Event Terdekat</div><div class="val" style="font-size:16px;line-height:1.3;padding-top:4px" id="txtNamaEventTerdekat">—</div><div class="note"><button class="btn sm ghost hanya-pelatih" onclick="editEventTerdekat()">Ubah</button></div></div>
+      </div>
+      <div class="card">
+        <h3>Menu Cepat</h3>
+        <div class="sub">Semua fitur utama ACS HUB.</div>
+        <div class="tile-grid">
+          <button class="tile" onclick="navKe('atlet')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></span><b>Data Atlet</b><span>Cari atlet &amp; buka rapotnya</span></button>
+          <button class="tile" onclick="navKe('hof')"><span class="ic gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v6a5 5 0 0 1-10 0V4zM7 6H4a1 1 0 0 0-1 1c0 2 1.5 3.5 4 3.5M17 6h3a1 1 0 0 1 1 1c0 2-1.5 3.5-4 3.5"/></svg></span><b>Hall of Fame</b><span>3 tercepat per nomor lomba</span></button>
+          <button class="tile" onclick="navKe('presensi')"><span class="ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 9h18M9 15l2 2 4-4"/></svg></span><b>Presensi</b><span>Checklist, QR, rekap &amp; izin</span></button>
+          <button class="tile" onclick="navKe('spp')"><span class="ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><b>SPP</b><span>Konfirmasi, verifikasi &amp; matriks</span></button>
+          <button class="tile" onclick="navKe('lomba')"><span class="ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17M5 21h14M9 7h6"/></svg></span><b>Pendaftaran Lomba</b><span>Daftar event &amp; rekap A3</span></button>
+          <button class="tile" onclick="navKe('input')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></span><b>Input Waktu</b><span>Catat waktu &amp; pacing target</span></button>
+          <button class="tile" onclick="bukaViewerBukuAcara()"><span class="ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13zM4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg></span><b>Buku Acara</b><span>Jadwal tanding dari PDF</span></button>
+          <button class="tile hanya-pelatih" onclick="bukaModalImportMasal()"><span class="ic rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span><b>Import Masal</b><span>Hasil lomba Excel / PDF / teks</span></button>
+          <button class="tile hanya-pelatih" onclick="bukaModalPacing()"><span class="ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span><b>Pacing Target</b><span>Hitung target dari PB 50m</span></button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Hall of Fame — <span id="statHofNomorDisplay">50m FR</span></h3>
+          <div class="sub">3 tercepat saat ini. <button class="btn sm ghost" onclick="navKe('hof')">Lihat semua →</button></div>
+          <div id="hofMini"></div>
+        </div>
+        <div class="card">
+          <h3>Ringkasan Bulan Ini</h3>
+          <div class="sub" id="txtRingkasanBulan">Memuat…</div>
+          <div id="ringkasanBulan"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: DATA ATLET ===== -->
+    <section class="view" id="view-atlet" hidden>
+      <div class="phead"><div class="grow"><h1>Data Atlet</h1><p id="txtJumlahAtlet">Memuat daftar atlet…</p></div>
+        <div class="actions"><button class="btn primary hanya-pelatih" onclick="bukaModalRegistrasi()">+ Atlet Baru</button></div>
+      </div>
+      <div class="searchbar" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="athleteSearch" placeholder="Cari nama lengkap atau panggilan…" oninput="renderAtletGrid()"></div>
+      <div class="chips" id="kuChips"></div>
+      <div id="athleteGrid"></div>
+      <div id="containerLoadMore" style="text-align:center;margin-top:10px" hidden><button class="btn" id="btnLoadMore" onclick="tampilkanLebihBanyakAtlet()">Tampilkan Selengkapnya</button></div>
+    </section>
+
+    <!-- ===== VIEW: RAPOT ===== -->
+    <section class="view" id="view-rapot" hidden>
+      <div class="phead"><div class="grow"><h1 id="txtRapotJudul">Rapot Atlet</h1><p>Profil, PB, progres, presensi &amp; SPP.</p></div>
+        <div class="actions"><button class="btn" onclick="backToDashboard()">← Kembali</button></div>
+      </div>
+      <div id="profileContent"></div>
+    </section>
+
+    <!-- ===== VIEW: HALL OF FAME ===== -->
+    <section class="view" id="view-hof" hidden>
+      <div class="phead"><div class="grow"><h1>Hall of Fame</h1><p>3 atlet tercepat di setiap nomor lomba.</p></div></div>
+      <div class="card">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div><label class="lbl">Jarak</label><select id="hofSelectJarak" class="input" style="width:130px" onchange="renderHallOfFameTercepat()">
+            <option>50m</option><option>100m</option><option>200m</option><option>400m</option><option>800m</option><option>1500m</option></select></div>
+          <div><label class="lbl">Gaya</label><select id="hofSelectGaya" class="input" style="width:130px" onchange="renderHallOfFameTercepat()">
+            <option>FR</option><option>BR</option><option>BK</option><option>BU</option><option>IM</option></select></div>
+        </div>
+        <div id="hallOfFameContainer" style="margin-top:16px"></div>
+      </div>
+      <div class="card">
+        <h3>Kategori per Nomor</h3>
+        <div class="sub">Ketuk kategori untuk melihat podiumnya.</div>
+        <div class="cat-grid" id="hofCatGrid"></div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: PRESENSI ===== -->
+    <section class="view" id="view-presensi" hidden>
+      <div class="phead"><div class="grow"><h1>Presensi Latihan</h1><p id="txtPresensiSub">Checklist manual, scan QR, rekap bulanan &amp; izin latihan.</p></div></div>
+      <div id="presensiCoachWrap">
+        <div class="card">
+          <div class="tabs">
+            <button id="tabPresensiManual" class="active" onclick="setTabPresensi('manual')">Checklist Manual</button>
+            <button id="tabPresensiQr" onclick="setTabPresensi('qr')">Scan QR</button>
+          </div>
+          <div id="panelPresensiManual">
+            <div class="searchbar" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="presensiSearch" placeholder="Cari atlet…" oninput="muatChecklistPresensi()"></div>
+            <div id="presensiChecklist"></div>
+          </div>
+          <div id="panelPresensiQr" hidden>
+            <p class="small muted" style="margin-bottom:10px">Foto kode QR atlet (nama panggilan). Bila perangkat tidak mendukung pemindai, isi nama secara manual.</p>
+            <input type="file" id="presensiQrFile" accept="image/*" capture="environment" class="input" onchange="prosesQrPresensi()">
+            <div id="presensiQrHasil" class="small" style="margin-top:10px"></div>
+            <div class="field" style="margin-top:12px"><label class="lbl">Atau isi nama panggilan manual</label>
+              <div style="display:flex;gap:8px"><input id="presensiQrNamaManual" class="input" placeholder="cth: BAGUS"><button class="btn primary" onclick="fallbackQrManual(true)">Simpan Hadir</button></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Rekap Presensi Bulanan</h3>
+          <div class="sub">Persentase kehadiran per atlet dalam satu bulan.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <div><label class="lbl">Bulan</label><input type="month" id="rekapPresensiBulan" class="input" style="width:170px"></div>
+            <button class="btn primary" onclick="muatRekapPresensi()">Tampilkan Rekap</button>
+          </div>
+          <div id="rekapPresensiHasil" style="margin-top:12px"></div>
+        </div>
+      </div>
+      <div class="card" id="cardIzin">
+        <h3 id="txtIzinJudul">Izin Latihan</h3>
+        <div class="sub" id="txtIzinSub">Wali mengirim surat izin untuk anaknya. Pelatih melihat daftar izin yang masuk.</div>
+        <div class="field"><label class="lbl">Nama Atlet (panggilan)</label><input id="izinNamaAtlet" class="input"></div>
+        <div class="field"><label class="lbl">Tanggal Izin</label><input type="date" id="izinTanggal" class="input"></div>
+        <div class="field"><label class="lbl">Alasan</label><textarea id="izinAlasan" class="input" rows="2" placeholder="cth: Sakit / Ada acara keluarga"></textarea></div>
+        <button class="btn primary" onclick="kirimIzinLatihan()">Kirim Izin</button>
+        <div id="izinListContainer" class="hanya-pelatih" style="margin-top:16px"></div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: SPP ===== -->
+    <section class="view" id="view-spp" hidden>
+      <div class="phead"><div class="grow"><h1>SPP</h1><p>Iuran bulanan atlet — konfirmasi wali, verifikasi pelatih, matriks tahunan.</p></div></div>
+      <div class="grid2">
+        <div class="card" id="cardSppWali">
+          <h3>Konfirmasi Pembayaran (Wali)</h3>
+          <div class="sub">Kirim bukti bayar SPP bulan berjalan. Status awal: PENDING VERIFIKASI.</div>
+          <div class="field"><label class="lbl">Nama Atlet (panggilan)</label><input id="sppNamaAtlet" class="input"></div>
+          <div class="field"><label class="lbl">Bulan</label><input type="month" id="sppBulan" class="input"></div>
+          <div class="field"><label class="lbl">Nominal (Rp)</label><input type="number" id="sppNominal" class="input" value="250000" min="1" step="1000"></div>
+          <div class="field"><label class="lbl">Catatan</label><input id="sppCatatan" class="input" placeholder="cth: Transfer BCA a.n. ..."></div>
+          <div class="field"><label class="lbl">Foto Bukti (opsional)</label><input type="file" id="sppFotoBukti" accept="image/*" class="input"></div>
+          <button class="btn primary" onclick="kirimKonfirmasiSpp()">Kirim Konfirmasi</button>
+          <div style="margin-top:16px"><h3 style="font-size:14px">Histori SPP Atlet</h3><div id="sppHistoriList" style="margin-top:8px"></div>
+          <button class="btn sm" onclick="muatHistoriSppAtlet()">Muat Histori</button></div>
+        </div>
+        <div class="card hanya-pelatih" id="cardSppCoach">
+          <h3>Verifikasi Konfirmasi (Pelatih)</h3>
+          <div class="sub">Setujui (LUNAS) atau tolak konfirmasi yang masuk.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <div><label class="lbl">Bulan</label><input type="month" id="sppCoachBulan" class="input" style="width:170px"></div>
+            <button class="btn primary" onclick="muatDaftarKonfirmasiSpp()">Tampilkan</button>
+          </div>
+          <div id="sppKonfirmasiList" style="margin-top:12px"></div>
+        </div>
+      </div>
+      <div class="card hanya-pelatih">
+        <h3>Matriks SPP Tahunan</h3>
+        <div class="sub">Status SPP semua atlet per bulan dalam satu tahun.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div><label class="lbl">Tahun</label><input type="number" id="sppMatriksTahun" class="input" style="width:110px"></div>
+          <button class="btn primary" onclick="muatMatriksSpp()">Tampilkan Matriks</button>
+        </div>
+        <div id="sppMatriksContainer" style="margin-top:12px"></div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: PENDAFTARAN LOMBA ===== -->
+    <section class="view" id="view-lomba" hidden>
+      <div class="phead"><div class="grow"><h1>Pendaftaran Lomba</h1><p>Daftar atlet ke kejuaraan &amp; rekap A3 (biaya per nomor).</p></div>
+        <div class="actions">
+          <button class="btn" onclick="bukaViewerBukuAcara()">Lihat Buku Acara</button>
+          <button class="btn primary hanya-pelatih" onclick="bukaModalPendaftaranLomba()">+ Daftarkan Atlet</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Rekap Pendaftaran (A3)</h3>
+        <div class="sub">Ringkasan per event, atau matriks nomor per atlet untuk satu event.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select id="selectFilterEventA3" class="input" style="width:260px" onchange="muatDataRekapA3SesuaiEvent()"><option value="all">-- Semua Event / Kejuaraan --</option></select>
+          <span class="pill" id="txtCountA3Wrap"><b id="txtCountA3">0</b>&nbsp;atlet</span>
+          <button class="btn hanya-pelatih" id="btnDownloadExcelA3" onclick="downloadExcelA3()">⬇ Excel A3</button>
+        </div>
+        <div id="containerTabelA3" style="margin-top:14px"></div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: INPUT WAKTU ===== -->
+    <section class="view" id="view-input" hidden>
+      <div class="phead"><div class="grow"><h1>Input Waktu</h1><p>Catat waktu latihan / kejuaraan, hitung pacing target, atau import masal.</p></div>
+        <div class="actions"><button class="btn hanya-pelatih" onclick="bukaModalImportMasal()">Import Masal</button></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h3 id="wktModalTitle">Catat Waktu Latihan</h3>
+          <div class="sub">Waktu di bawah batas minimum per jarak akan ditolak server (mis. 50m di bawah 15 detik).</div>
+          <input type="hidden" id="wktRowIndex" value="">
+          <div class="field"><label class="lbl">Nama Atlet</label>
+            <input id="wktNamaInput" class="input" placeholder="Ketik min. 2 huruf…" autocomplete="off" oninput="handleWaktuAtletSuggest()">
+            <input type="hidden" id="wktNamaHidden">
+            <div id="wktSuggestBox" class="card hidden" style="position:absolute;z-index:20;margin:4px 0;padding:4px;max-height:220px;overflow-y:auto"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label class="lbl">Jarak</label><select id="inputJarak" class="input"><option>50m</option><option>100m</option><option>200m</option><option>400m</option><option>800m</option><option>1500m</option></select></div>
+            <div class="field"><label class="lbl">Gaya</label><select id="inputGaya" class="input"><option>FR</option><option>BR</option><option>BK</option><option>BU</option><option>IM</option></select></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label class="lbl">Tanggal</label><input type="date" id="wktTanggal" class="input"></div>
+            <div class="field"><label class="lbl">Waktu (cth: 0:36.26 atau 36.26)</label><input id="wktWaktu" class="input mono" placeholder="0:36.26"></div>
+          </div>
+          <div class="field"><label class="lbl">Status</label><select id="wktStatus" class="input"><option>Latihan</option><option>Kejuaraan</option></select></div>
+          <label class="small" style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="chkKirimWa" checked> Kirim notifikasi WA ke wali (bila ada nomor)</label>
+          <div style="display:flex;gap:8px"><button class="btn primary" onclick="prosesSimpanWaktu()">Simpan Waktu</button><button class="btn ghost" onclick="resetFormWaktu()">Bersihkan</button></div>
+        </div>
+        <div>
+          <div class="card">
+            <h3>Pacing Target</h3>
+            <div class="sub">Estimasi waktu total &amp; pacing per 50m dari PB 50m (rumus Riegel).</div>
+            <div class="field"><label class="lbl">PB 50m (detik, cth: 36.26)</label><input type="number" id="pacingPb" class="input mono" step="0.01" min="0" placeholder="36.26"></div>
+            <div class="field"><label class="lbl">Jarak Target</label><select id="pacingJarak" class="input"><option value="100">100m</option><option value="200">200m</option><option value="400">400m</option><option value="800">800m</option><option value="1500">1500m</option></select></div>
+            <button class="btn primary" onclick="hitungPacing()">Hitung Pacing</button>
+            <div id="pacingHasil" style="margin-top:12px"></div>
+          </div>
+          <div class="card">
+            <h3>Import Masal</h3>
+            <div class="sub">Hasil lomba dari file Excel, PDF, atau tempel teks — khusus pelatih.</div>
+            <button class="btn hanya-pelatih" onclick="bukaModalImportMasal()">Buka Import Masal</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Bottom nav (mobile) -->
+<nav class="bottomnav" id="bottomNav">
+  <button data-nav="dashboard" onclick="navKe('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Beranda</button>
+  <button data-nav="atlet" onclick="navKe('atlet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>Atlet</button>
+  <button data-nav="presensi" onclick="navKe('presensi')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 9h18M9 15l2 2 4-4"/></svg>Presensi</button>
+  <button data-nav="spp" onclick="navKe('spp')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>SPP</button>
+  <button data-nav="lomba" onclick="navKe('lomba')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17M5 21h14M9 7h6"/></svg>Lomba</button>
+</nav>
+
+<!-- FAB pelatih (mobile) -->
+<button class="fab hanya-pelatih" id="btnMainFab" onclick="toggleFabMenu()" title="Menu cepat">+</button>
+<div class="fab-menu hidden" id="fabSubMenu">
+  <button onclick="bukaModalPendaftaranLomba();toggleFabMenu()">📋 Pendaftaran Lomba</button>
+  <button onclick="navKe('input');toggleFabMenu()">⏱ Input Waktu</button>
+  <button onclick="bukaModalRegistrasi();toggleFabMenu()">👤 Registrasi Atlet</button>
+  <button onclick="bukaModalImportMasal();toggleFabMenu()">📥 Import Masal</button>
+  <button onclick="bukaModalBukuAcara();toggleFabMenu()">📖 Analisis Buku Acara</button>
+</div>
+
+<!-- Loader -->
+<div class="loader-back hidden" id="globalLoader">
+  <div class="loader-box">
+    <div class="spinner"></div>
+    <div style="font-weight:700" id="loaderText">Memuat…</div>
+    <div class="small muted" id="loaderSubText"></div>
+    <button class="btn sm" style="margin-top:12px" onclick="showLoading(false)">Tutup</button>
+  </div>
+</div>
+
+<!-- Modal generik: alert / confirm -->
+<div class="modal-back hidden" id="genericModalBack">
+  <div class="modal" style="max-width:420px">
+    <h3 id="genericModalTitle">Info</h3>
+    <p class="m-sub" id="genericModalText" style="white-space:pre-line"></p>
+    <div id="genericModalInputWrap" class="field" hidden><input id="genericModalInput" class="input"></div>
+    <div class="m-actions">
+      <button class="btn" id="genericModalCancel">Batal</button>
+      <button class="btn primary" id="genericModalOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: PENGATURAN (UBAH PASSWORD) ===== -->
+<div class="modal-back hidden" id="settingsModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><h3>Pengaturan</h3><button class="x-btn" onclick="tutupModal('settingsModal')">✕</button></div>
+    <p class="m-sub">Ubah password akun Anda.</p>
+    <div class="field"><label class="lbl">Password Lama</label><input type="password" id="setPassLama" class="input" autocomplete="current-password"></div>
+    <div class="field"><label class="lbl">Password Baru (min. 6 karakter)</label><input type="password" id="setPassBaru" class="input" autocomplete="new-password"></div>
+    <div class="m-actions"><button class="btn" onclick="tutupModal('settingsModal')">Batal</button><button class="btn primary" onclick="prosesUbahPassword()">Simpan Password</button></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ADMIN PROFIL ATLET ===== -->
+<div class="modal-back hidden" id="adminModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="txtAdminJudul">Profil Atlet</h3><button class="x-btn" onclick="tutupModal('adminModal')">✕</button></div>
+    <p class="m-sub">Tambah atlet baru atau ubah biodata. Nama panggilan adalah kunci &amp; username wali — tidak bisa diubah saat edit.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label class="lbl">Nama Panggilan *</label><input id="admKey" class="input" placeholder="cth: BAGUS"></div>
+      <div class="field"><label class="lbl">Jenis Kelamin</label><select id="admGender" class="input"><option>Laki-laki</option><option>Perempuan</option></select></div>
+    </div>
+    <div class="field"><label class="lbl">Nama Lengkap *</label><input id="admNama" class="input" placeholder="cth: Bagus Aryo Dewandaru"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="field"><label class="lbl">Tgl Lahir</label><input type="date" id="admTgl" class="input"></div>
+      <div class="field"><label class="lbl">NISN</label><input id="admNisn" class="input"></div>
+      <div class="field"><label class="lbl">NIK</label><input id="admNik" class="input"></div>
+    </div>
+    <div class="field"><label class="lbl">No. HP Wali</label><input id="admNoHp" class="input" placeholder="cth: 081234567890"></div>
+    <div class="field"><label class="lbl">Foto Atlet</label><input type="file" id="admFoto" accept="image/*" class="input"><p class="small muted" id="txtFotoLama" style="margin-top:4px"></p></div>
+    <div class="m-actions">
+      <button class="btn danger hidden" id="btnHapusAtlet" onclick="hapusAtletIni()">🗑 Hapus Atlet</button>
+      <span style="flex:1"></span>
+      <button class="btn" onclick="tutupModal('adminModal')">Batal</button>
+      <button class="btn primary" onclick="prosesSimpanAdmin()">Simpan Biodata</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: KARAKTER ===== -->
+<div class="modal-back hidden" id="karakterModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><h3>Evaluasi Karakter</h3><button class="x-btn" onclick="tutupModal('karakterModal')">✕</button></div>
+    <p class="m-sub">Penilaian pelatih untuk atlet ini (0–100).</p>
+    <div class="field"><label class="lbl">Disiplin — <b id="valDisiplin">80</b></label><input type="range" id="sldDisiplin" min="0" max="100" value="80" oninput="document.getElementById('valDisiplin').innerText=this.value"></div>
+    <div class="field"><label class="lbl">Fokus — <b id="valFokus">80</b></label><input type="range" id="sldFokus" min="0" max="100" value="80" oninput="document.getElementById('valFokus').innerText=this.value"></div>
+    <div class="field"><label class="lbl">Daya Juang — <b id="valDayaJuang">80</b></label><input type="range" id="sldDayaJuang" min="0" max="100" value="80" oninput="document.getElementById('valDayaJuang').innerText=this.value"></div>
+    <div class="field"><label class="lbl">Catatan Pelatih</label><textarea id="txtInputEvaluasi" class="input" rows="3" placeholder="Catatan evaluasi…"></textarea></div>
+    <div class="m-actions"><button class="btn" onclick="tutupModal('karakterModal')">Batal</button><button class="btn primary" onclick="prosesSimpanKarakter()">Simpan Evaluasi</button></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ZOOM FOTO ===== -->
+<div class="modal-back hidden" id="fotoZoomModal" onclick="if(event.target===this)tutupModal('fotoZoomModal')">
+  <div class="modal" style="max-width:480px;text-align:center">
+    <img id="imgZoomTarget" alt="Foto atlet" style="border-radius:14px;max-height:70vh">
+    <p class="small muted" id="txtZoomCaption" style="margin-top:8px"></p>
+    <button class="btn" style="margin-top:10px" onclick="tutupModal('fotoZoomModal')">Tutup</button>
+  </div>
+</div>
+
+<!-- ===== MODAL: PENDAFTARAN LOMBA ===== -->
+<div class="modal-back hidden" id="pendaftaranLombaModal">
+  <div class="modal wide">
+    <div class="modal-head"><h3 id="txtTitleFormPendaftaran">Formulir Pendaftaran Lomba</h3><button class="x-btn" onclick="tutupModal('pendaftaranLombaModal')">✕</button></div>
+    <p class="m-sub">Nomor yang sudah terdaftar di event yang sama akan digabung (tidak duplikat).</p>
+    <input type="hidden" id="pdfIsEditMode" value="0"><input type="hidden" id="pdfOldKeyAtlet" value="">
+    <div class="field"><label class="lbl">Event / Kejuaraan</label><div id="containerInputEvent"><select id="pdfSelectEvent" class="input"><option value="">-- Memuat Daftar Event... --</option></select></div>
+      <input type="text" id="pdfNamaEventBaru" placeholder="Ketik nama event baru di sini..." class="input hidden" style="margin-top:8px"></div>
+    <div class="field"><label class="lbl">Nama Atlet</label>
+      <input id="pdfAtletInput" class="input" placeholder="Ketik min. 2 huruf…" autocomplete="off" oninput="handlePendaftaranAtletSuggest()">
+      <input type="hidden" id="pdfAtletHidden"><input type="hidden" id="pdfPaPi" value="-">
+      <div id="pdfSuggestBox" class="card hidden" style="position:absolute;z-index:20;margin:4px 0;padding:4px;max-height:220px;overflow-y:auto"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="field"><label class="lbl">Kategori Event</label><select id="pdfKategoriEvent" class="input" onchange="updateOpsiNomorLomba()"><option>Resmi</option><option>Fun</option><option>Krapsi</option><option>Kras</option></select></div>
+      <div class="field"><label class="lbl">Jarak</label><select id="pdfSelectJarak" class="input"></select></div>
+      <div class="field"><label class="lbl">Gaya</label><select id="pdfSelectGaya" class="input"></select></div>
+    </div>
+    <button class="btn" onclick="tambahNomorTerpilih()">+ Tambah Nomor Ini</button>
+    <div id="containerNomorTerpilih" style="margin-top:10px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px">
+      <div class="field"><label class="lbl">Biaya per Nomor (Rp)</label><input type="number" id="pdfBiayaPerNomor" class="input" value="50000" min="0" step="1000" oninput="hitungTotalBiayaLomba()"></div>
+      <div class="field"><label class="lbl">Status Bayar</label><select id="pdfStatusBayar" class="input"><option>Belum Lunas</option><option>Lunas</option></select></div>
+      <div class="field"><label class="lbl">No. HP Wali</label><input id="pdfNoHpWali" class="input" placeholder="0812..."></div>
+    </div>
+    <div class="a3" style="display:flex;justify-content:space-between;align-items:center"><span class="small muted">Total Biaya</span><b class="mono" id="pdfTotalBiayaDisplay" style="font-size:18px">Rp 0</b></div>
+    <label class="small" style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="chkKirimWaPendaftaran" checked> Kirim notifikasi WA tagihan ke wali setelah simpan</label>
+    <div class="m-actions">
+      <button class="btn hanya-pelatih" onclick="kirimWaManualPendaftaran()">📲 Kirim Form &amp; Tagihan WA</button>
+      <span style="flex:1"></span>
+      <button class="btn" onclick="tutupModal('pendaftaranLombaModal')">Batal</button>
+      <button class="btn primary" onclick="prosesSimpanPendaftaranLomba()">Simpan Pendaftaran</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: EDIT EVENT A3 ===== -->
+<div class="modal-back hidden" id="modalEditEventA3">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Edit Event</h3><button class="x-btn" onclick="tutupModal('modalEditEventA3')">✕</button></div>
+    <p class="m-sub">Ubah nama event &amp; biaya per nomor untuk semua pendaftaran event ini.</p>
+    <input type="hidden" id="editEventOldName">
+    <div class="field"><label class="lbl">Nama Event Baru</label><input id="editEventNewName" class="input"></div>
+    <div class="field"><label class="lbl">Biaya per Nomor (Rp)</label><input type="number" id="editEventBiayaGlobal" class="input" min="0" step="1000"></div>
+    <div class="m-actions">
+      <button class="btn danger" onclick="prosesHapusEventA3()">🗑 Hapus Event</button>
+      <span style="flex:1"></span>
+      <button class="btn" onclick="tutupModal('modalEditEventA3')">Batal</button>
+      <button class="btn primary" onclick="prosesSimpanEditEventA3()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: BUKU ACARA (ANALISIS PDF) ===== -->
+<div class="modal-back hidden" id="bukuAcaraModal">
+  <div class="modal wide">
+    <div class="modal-head"><h3>Analisis Buku Acara (PDF)</h3><button class="x-btn" onclick="tutupModal('bukuAcaraModal')">✕</button></div>
+    <p class="m-sub">Unggah PDF buku acara / start list — jadwal atlet ACS akan diekstrak otomatis, lalu simpan ke Google Sheet.</p>
+    <div class="field"><label class="lbl">Nama Event</label><input id="baNamaEvent" class="input"></div>
+    <div class="field"><label class="lbl">File PDF Buku Acara</label><input type="file" id="baPdfInput" accept="application/pdf" class="input"></div>
+    <div id="baProgressContainer" class="hidden" style="margin:10px 0">
+      <div class="progress"><i id="baProgressBar" style="width:0%"></i></div>
+      <div class="small muted" style="margin-top:4px">Membaca PDF… <span id="baProgressPercent">0%</span></div>
+    </div>
+    <button class="btn primary" id="btnEkstrakBukuAcara" onclick="prosesAnalisisBukuAcaraPDF()">Ekstrak Jadwal dari PDF</button>
+    <div id="baHasilContainer" class="hidden" style="margin-top:14px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <b><span id="baTotalCount">0</span> jadwal ditemukan</b>
+        <input id="baSearchAtlet" class="input" style="width:220px" placeholder="Cari atlet / acara…" oninput="filterTabelBukuAcara()">
+        <span style="flex:1"></span>
+        <button class="btn primary" id="btnSimpanBukuAcaraSheet" onclick="simpanJadwalBukuAcaraKeSheet()">Simpan ke Google Sheet</button>
+      </div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>No</th><th>Nama Acara</th><th>Seri</th><th>Lintasan</th><th>Atlet</th><th>Klub</th><th>Entry</th></tr></thead><tbody id="baTabelBody"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: VIEWER BUKU ACARA ===== -->
+<div class="modal-back hidden" id="viewerBukuAcaraModal">
+  <div class="modal wide">
+    <div class="modal-head"><h3>Jadwal Buku Acara</h3><button class="x-btn" onclick="tutupModal('viewerBukuAcaraModal')">✕</button></div>
+    <p class="m-sub">Jadwal tanding atlet ACS yang tersimpan di Google Sheet.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+      <select id="selectEventViewerBA" class="input" style="width:240px" onchange="muatJadwalBukuAcara()"><option value="all">-- Semua Event --</option></select>
+      <input id="searchViewerBA" class="input" style="width:220px" placeholder="Cari atlet / acara / no…" oninput="renderTabelViewerBukuAcara()">
+      <span class="pill"><b id="txtCountViewerBA">0</b>&nbsp;jadwal</span>
+      <span style="flex:1"></span>
+      <button class="btn danger hanya-pelatih" id="btnHapusBukuAcara" onclick="prosesHapusBukuAcara()">🗑 Hapus Event Ini</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>No</th><th>Nama Acara</th><th>Seri</th><th>Lintasan</th><th>Atlet</th><th>Klub</th><th>Entry</th></tr></thead><tbody id="viewerBATabelBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: IMPORT MASAL ===== -->
+<div class="modal-back hidden" id="importMasalModal">
+  <div class="modal wide">
+    <div class="modal-head"><h3>Import Hasil Lomba Masal</h3><button class="x-btn" onclick="tutupModal('importMasalModal')">✕</button></div>
+    <p class="m-sub">Dari file Excel / PDF hasil lomba, atau tempel teks hasil. Hanya baris atlet ACS yang diambil; DQ / NS / DNF / SCR dilewati.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label class="lbl">Nama Event</label><input id="impNamaEvent" class="input" placeholder="cth: Kejurprov 2026"></div>
+      <div class="field"><label class="lbl">Tanggal Lomba</label><input type="date" id="impTanggal" class="input"></div>
+    </div>
+    <div class="field"><label class="lbl">File Excel (.xlsx) atau PDF hasil lomba</label><input type="file" id="fileImportHasil" accept=".xlsx,.xls,.pdf" class="input" onchange="prosesFileImportHasil(this)"></div>
+    <div class="field"><label class="lbl">Atau tempel teks hasil lomba</label><textarea id="txtImportArea" class="input mono" rows="6" placeholder="Tempel teks hasil lomba di sini…"></textarea></div>
+    <label class="small" style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="chkFilterStrictAcs" checked> Hanya ambil baris yang menyebut klub ACS / ALL CAN SWIM</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" onclick="prosesAnalisisTeksKejuaraan()">Analisis Teks</button></div>
+    <div id="previewImportContainer" class="hidden" style="margin-top:14px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><b><span id="cntImpData">0</span> data terdeteksi</b><span style="flex:1"></span><button class="btn primary" id="btnEksekusiImport" onclick="eksekusiSimpanMasal()">Simpan Semua yang Dicentang</button></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th><input type="checkbox" id="chkSelectAllImport" checked onchange="toggleSelectAllImport(this)"></th><th>Atlet</th><th>Nomor</th><th>Waktu</th><th>Status</th></tr></thead><tbody id="tblPreviewImportBody"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: REGISTRASI ATLET ===== -->
+<div class="modal-back hidden" id="registrasiModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Registrasi Atlet Baru</h3><button class="x-btn" onclick="tutupModal('registrasiModal')">✕</button></div>
+    <p class="m-sub">Atlet baru langsung mendapat akun wali (username = nama panggilan, password acak sekali pakai).</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label class="lbl">Nama Panggilan *</label><input id="regPanggilan" class="input" placeholder="cth: BAGUS"></div>
+      <div class="field"><label class="lbl">Jenis Kelamin</label><select id="regGender" class="input"><option>Laki-laki</option><option>Perempuan</option></select></div>
+    </div>
+    <div class="field"><label class="lbl">Nama Lengkap *</label><input id="regNama" class="input"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="field"><label class="lbl">Tgl Lahir *</label><input type="date" id="regTgl" class="input"></div>
+      <div class="field"><label class="lbl">NISN</label><input id="regNisn" class="input"></div>
+      <div class="field"><label class="lbl">NIK</label><input id="regNik" class="input"></div>
+    </div>
+    <div class="field"><label class="lbl">No. HP Wali</label><input id="regHp" class="input" placeholder="0812..."></div>
+    <div class="field"><label class="lbl">Foto Atlet</label><input type="file" id="regFoto" accept="image/*" class="input"></div>
+    <div class="m-actions"><button class="btn" onclick="tutupModal('registrasiModal')">Batal</button><button class="btn primary" onclick="prosesRegistrasiAtlet()">Daftarkan Atlet</button></div>
+  </div>
+</div>
+<script>
+/* =================================================================
+   ACS HUB v13 — frontend rebuild dari nol (desain mockup 15 Nov 2026)
+   Backend: Kode.gs v12.1 (tidak diubah). Semua data dari API.
+   ================================================================= */
+"use strict";
+
+/* ---------- util ---------- */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s===undefined||s===null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+function isPelatih(){ return currentUserSession && (currentUserSession.role==="pelatih"||currentUserSession.role==="admin"); }
+function isWali(){ return currentUserSession && currentUserSession.role==="wali"; }
+function getToken(){ return currentUserSession ? currentUserSession.token : ""; }
+function formatRupiah(n){ n=parseInt(n)||0; return "Rp "+n.toLocaleString("id-ID"); }
+function formatKeIndo(iso){ if(!iso) return ""; var m=String(iso).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return m[3].padStart(2,"0")+"/"+m[2].padStart(2,"0")+"/"+m[1]; return String(iso); }
+function formatKeValidDate(str){ if(!str) return ""; var m=String(str).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if(m) return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0"); var m2=String(str).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m2) return m2[1]+"-"+m2[2].padStart(2,"0")+"-"+m2[3].padStart(2,"0"); return ""; }
+function hariIniISO(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function bulanIniYM(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
+function inisial(nama){ var p=String(nama||"?").trim().split(/\s+/); return (p[0]?p[0][0]:"?")+(p.length>1?p[p.length-1][0]:""); }
+function avatarHtml(nama, cls){ var c=cls||""; return '<span class="avatar '+c+'">'+esc(inisial(nama).toUpperCase())+'</span>'; }
+function avatarFotoHtml(foto, nama, cls){ if(foto) return '<span class="avatar '+(cls||"")+'"><img src="'+esc(foto)+'" alt="'+esc(nama||"")+'"></span>'; return avatarHtml(nama, cls); }
+
+/* ---------- toast / alert / confirm (pengganti SweetAlert2) ---------- */
+var _toastTimer=null;
+function toast(msg){ var t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); clearTimeout(_toastTimer); _toastTimer=setTimeout(function(){ t.remove(); },3500); }
+function showAlert(judul, teks){ return new Promise(function(res){ $("genericModalTitle").textContent=judul; $("genericModalText").textContent=teks||""; $("genericModalInputWrap").hidden=true; $("genericModalCancel").classList.add("hidden"); $("genericModalOk").textContent="OK"; $("genericModalBack").classList.remove("hidden"); $("genericModalOk").onclick=function(){ $("genericModalBack").classList.add("hidden"); res(true); }; }); }
+function showConfirm(judul, teks, labelOk){ return new Promise(function(res){ $("genericModalTitle").textContent=judul; $("genericModalText").textContent=teks||""; $("genericModalInputWrap").hidden=true; $("genericModalCancel").classList.remove("hidden"); $("genericModalOk").textContent=labelOk||"Ya, Lanjutkan"; $("genericModalBack").classList.remove("hidden"); $("genericModalOk").onclick=function(){ $("genericModalBack").classList.add("hidden"); res(true); }; $("genericModalCancel").onclick=function(){ $("genericModalBack").classList.add("hidden"); res(false); }; }); }
+function showPrompt(judul, teks, nilaiAwal, placeholder){ return new Promise(function(res){ $("genericModalTitle").textContent=judul; $("genericModalText").textContent=teks||""; $("genericModalInputWrap").hidden=false; var inp=$("genericModalInput"); inp.value=nilaiAwal||""; inp.placeholder=placeholder||""; $("genericModalCancel").classList.remove("hidden"); $("genericModalOk").textContent="Simpan"; $("genericModalBack").classList.remove("hidden"); setTimeout(function(){ inp.focus(); },50); $("genericModalOk").onclick=function(){ $("genericModalBack").classList.add("hidden"); res(inp.value); }; $("genericModalCancel").onclick=function(){ $("genericModalBack").classList.add("hidden"); res(null); }; }); }
+
+/* ---------- loader ---------- */
+function showLoading(status, teks, subTeks){ var l=$("globalLoader"); if(status){ $("loaderText").textContent=teks||"Memuat…"; $("loaderSubText").textContent=subTeks||""; l.classList.remove("hidden"); } else { l.classList.add("hidden"); } }
+
+/* ---------- tema (mockup: data-theme + data-accent, localStorage) ---------- */
+var TEMA_KEY="ACS_TEMA_V13";
+function terapkanTema(){ var t={mode:"dark",accent:"teal"}; try{ var s=JSON.parse(localStorage.getItem(TEMA_KEY)||"null"); if(s){ t.mode=s.mode||"dark"; t.accent=s.accent||"teal"; } }catch(e){} document.documentElement.setAttribute("data-theme", t.mode); document.documentElement.setAttribute("data-accent", t.accent); var b=$("btnModeTema"); if(b) b.textContent=(t.mode==="dark"?"🌙 Gelap":"☀️ Terang"); document.querySelectorAll(".swatch").forEach(function(sw){ sw.classList.toggle("active", sw.getAttribute("data-accent")===t.accent); }); }
+function simpanTema(mode, accent){ var cur={mode:document.documentElement.getAttribute("data-theme")||"dark", accent:document.documentElement.getAttribute("data-accent")||"teal"}; if(mode) cur.mode=mode; if(accent) cur.accent=accent; localStorage.setItem(TEMA_KEY, JSON.stringify(cur)); terapkanTema(); }
+function toggleModeTema(){ var m=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"; simpanTema(m,null); }
+function setAksen(a){ simpanTema(null,a); }
+
+/* ---------- state global ---------- */
+var currentUserSession=null;
+var globalMasterAtletList=[];
+var currentLoadedProfil=null;
+var globalRiwayat=[];
+var globalBestTimes={};
+var globalDataA3List=[];
+var globalDataViewerBA=[];
+var parsedImportDataList=[];
+var parsedBukuAcaraDataList=[];
+var listNomorLombaTerpilih=[];
+var LAST_SAVED_EVENT_NAME="";
+var LAST_SAVED_BIAYA_PER_NOMOR="";
+var LIMIT_BARIS_PERTAMA=6;
+var atletTampilSemua=false;
+var kuFilterAktif="all";
+var activeA3ViewMode="card";
+var fotoProfilLama="";
+var JARAK_LIST=["50m","100m","200m","400m","800m","1500m"];
+var GAYA_LIST=["FR","BR","BK","BU","IM"];
+var GAYA_NAMA={FR:"Bebas",BR:"Dada",BK:"Punggung",BU:"Kupu-Kupu",IM:"Ganti"};
+var BULAN_NAMA=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+var BULAN_SINGKAT=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+
+/* ---------- backend GitHub Pages: fetch POST JSON ke Apps Script /exec ---------- */
+/* v13-pages: frontend ini di-host statis (GitHub Pages) sehingga tidak ada lagi
+   pemanggilan server ala Apps Script di sisi klien. Semua panggilan server
+   lewat HTTP POST ke URL /exec di bawah.
+   - Body JSON {fn, args} dengan Content-Type: text/plain supaya request tergolong
+     "simple request" dan TIDAK kena preflight CORS.
+   - Sukses transport + {ok:true}  -> resolve(data.result). Result boleh berisi
+     {error:"..."} dari backend; itu diteruskan apa adanya supaya tanganiResError()
+     di pemanggil tetap bekerja seperti sebelumnya.
+   - Gagal transport / HTTP != 200 / bukan JSON / {ok:false} -> reject(Error). */
+var BACKEND_URL="https://script.google.com/macros/s/AKfycbzzTH0Q0i3OnxDE2eqLVi2efv_-EMJhfgOSnz93UDo_DZpqDxmuGlJ49xFf5KZxOL3Y/exec";
+function panggilBackend(namaFungsi, argsArray, signal){
+  var opt={method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({fn:namaFungsi, args:argsArray||[]})};
+  if(signal) opt.signal=signal;
+  return fetch(BACKEND_URL, opt).then(function(resp){
+    if(!resp.ok) throw new Error("HTTP "+resp.status+" dari backend.");
+    return resp.json().catch(function(){ throw new Error("Backend tidak mengembalikan JSON (apakah Kode.gs dengan doPost sudah di-deploy sebagai version baru?)."); });
+  }).then(function(data){
+    if(data && data.ok) return data.result;
+    throw new Error((data && data.error)||"Respons backend tidak dikenal.");
+  });
+}
+
+/* ---------- panggilServer (pola v12.1: timeout 90 dtk, retry 1x baca) ---------- */
+function panggilServer(namaFungsi, argsArray, opsi){
+  opsi=opsi||{};
+  var timeoutMs=90000, autoRetry=(opsi.autoRetry===undefined?true:opsi.autoRetry);
+  var selesai=false, timer=null, sudahRetry=false;
+  showLoading(true, opsi.pesan||"Memuat…");
+  function jalankan(){
+    var controller=new AbortController();
+    timer=setTimeout(function(){
+      if(selesai) return;
+      controller.abort();
+      if(autoRetry && !sudahRetry){
+        sudahRetry=true; showLoading(true,"Server lambat, masih mencoba…");
+        jalankan(); return;
+      }
+      showLoading(false);
+      showConfirm("Koneksi Lambat","Server tidak merespons dalam 90 detik. Coba lagi?","Coba Lagi").then(function(ya){ if(ya) panggilServer(namaFungsi,argsArray,opsi); });
+    }, timeoutMs);
+    panggilBackend(namaFungsi, argsArray||[], controller.signal).then(function(res){
+      if(selesai) return; selesai=true; clearTimeout(timer);
+      if(opsi.onSukses) opsi.onSukses(res); else showLoading(false);
+    }, function(err){
+      if(selesai) return;
+      if(err && err.name==="AbortError") return; /* timeout sudah ditangani timer di atas */
+      selesai=true; clearTimeout(timer); gagalServer(err);
+    });
+  }
+  jalankan();
+}
+function gagalServer(err){
+  showLoading(false);
+  var msg=(err&&err.message)?err.message:String(err||"Terjadi kesalahan koneksi.");
+  showAlert("Gagal Koneksi Backend", msg+"\n\nPeriksa koneksi internet, lalu coba lagi.");
+}
+function tanganiResError(res){
+  if(res && res.error){
+    showLoading(false);
+    if(res.error==="SESI_HABIS"){ sesiHabis(); return true; }
+    if(res.error==="AKSES_DITOLAK"){ showAlert("Akses Ditolak","Anda tidak berhak mengakses data ini."); return true; }
+    showAlert("Terjadi Kesalahan", String(res.error)); return true;
+  }
+  return false;
+}
+function sesiHabis(){
+  currentUserSession=null; localStorage.removeItem("ACS_SESSION");
+  $("appWrap").hidden=true; $("loginWrap").hidden=false;
+  showAlert("Sesi Habis","Sesi Anda sudah berakhir. Silakan login kembali.");
+}
+
+/* ---------- sesi / login ---------- */
+function cekSessionLogin(){
+  var savedEvent=localStorage.getItem("ACS_EVENT_TERDEKAT");
+  if(savedEvent) $("txtNamaEventTerdekat").textContent=savedEvent;
+  var session=localStorage.getItem("ACS_SESSION");
+  if(session){
+    try{
+      currentUserSession=JSON.parse(session);
+      if(!currentUserSession || !currentUserSession.token) throw new Error("Sesi tanpa token");
+      $("loginWrap").hidden=true; $("appWrap").hidden=false;
+      terapkanHakAksesUser(); muatAwalSistem();
+    }catch(e){ localStorage.removeItem("ACS_SESSION"); $("loginWrap").hidden=false; }
+  } else { $("loginWrap").hidden=false; }
+}
+function prosesAuthentikasi(){
+  var u=$("loginUsername").value.trim(), p=$("loginPassword").value;
+  if(!u || !p){ showAlert("Perhatian","Username dan Password wajib diisi!"); return; }
+  panggilServer("prosesLogin",[u,p],{ pesan:"Verifikasi Akun Pengguna…", autoRetry:true, onSukses:function(res){
+    showLoading(false);
+    if(!res || res.error){ showAlert("Gagal Login",(res&&res.error)?res.error:"Username atau password salah."); return; }
+    currentUserSession=res; localStorage.setItem("ACS_SESSION", JSON.stringify(res));
+    $("loginWrap").hidden=true; $("appWrap").hidden=false;
+    terapkanHakAksesUser(); muatAwalSistem();
+    if(res.mustChangePassword){ showAlert("Ganti Password","Ini login pertama Anda. Silakan ganti password default Anda sekarang.").then(function(){ bukaSettings(); }); }
+  }});
+}
+function prosesLogout(){
+  showConfirm("Keluar?","Anda akan keluar dari ACS HUB di perangkat ini.","Ya, Keluar").then(function(ya){
+    if(!ya) return;
+    currentUserSession=null; localStorage.removeItem("ACS_SESSION");
+    currentLoadedProfil=null; globalMasterAtletList=[];
+    $("appWrap").hidden=true; $("loginWrap").hidden=false;
+    $("loginPassword").value="";
+  });
+}
+function terapkanHakAksesUser(){
+  if(!currentUserSession) return;
+  var role=currentUserSession.role;
+  var label=(role==="pelatih"||role==="admin")?"PELATIH":"WALI ("+(currentUserSession.atletKey||"SISWA")+")";
+  var b1=$("badgeAkses"), b2=$("badgeAksesTop");
+  if(b1){ b1.textContent=label; b1.className="badge-role "+((role==="pelatih"||role==="admin")?"coach":"wali"); }
+  if(b2){ b2.textContent=label; b2.className="badge-role "+((role==="pelatih"||role==="admin")?"coach":"wali"); }
+  $("txtUserAktif").textContent=currentUserSession.username||"";
+  var pelatih=isPelatih();
+  document.querySelectorAll(".hanya-pelatih").forEach(function(el){ el.classList.toggle("hidden", !pelatih); });
+  document.querySelectorAll(".hanya-wali").forEach(function(el){ el.classList.toggle("hidden", pelatih); });
+}
+
+/* ---------- router antar view ---------- */
+var VIEW_IDS=["dashboard","atlet","rapot","hof","presensi","spp","lomba","input"];
+function navKe(nama){
+  VIEW_IDS.forEach(function(v){ var el=$("view-"+v); if(el) el.hidden=(v!==nama); });
+  document.querySelectorAll("[data-nav]").forEach(function(el){ el.classList.toggle("active", el.getAttribute("data-nav")===nama); });
+  window.scrollTo({top:0});
+  if(nama==="atlet") renderAtletGrid();
+  if(nama==="hof") renderHallOfFameTercepat();
+  if(nama==="presensi") siapkanViewPresensi();
+  if(nama==="spp") siapkanViewSpp();
+  if(nama==="lomba") bukaModalRekapA3Data();
+  if(nama==="input") siapkanViewInput();
+}
+function backToDashboard(){ currentLoadedProfil=null; navKe("dashboard"); }
+function tutupModal(idModal){ var el=$(idModal); if(el) el.classList.add("hidden"); }
+function bukaModal(idModal){ var el=$(idModal); if(el) el.classList.remove("hidden"); }
+function toggleFabMenu(){ $("fabSubMenu").classList.toggle("hidden"); }
+
+/* ---------- waktu: parse & format (klien, cermin server) ---------- */
+function parseKeDetikMurni(str){
+  if(str===undefined||str===null) return 0;
+  var s=String(str).trim().replace(",",".");
+  if(/GMT/i.test(s)) return 0;
+  if(/[a-zA-Z]{3,}/.test(s)) return 0;
+  var parts=s.split(":");
+  if(parts.length===2){ var m=parseFloat(parts[0])||0, d=parseFloat(parts[1])||0; return m*60+d; }
+  var dotParts=s.split(".");
+  if(dotParts.length===3){ var m2=parseFloat(dotParts[0])||0, d2=parseFloat(dotParts[1])||0, c2=parseFloat("0."+dotParts[2])||0; return m2*60+d2+c2; }
+  var v=parseFloat(s); if(isNaN(v)) return 0; if(v<5||v>7200) return 0; return v;
+}
+function formatDetikKeMenit(detik){
+  if(detik===undefined||detik===null||isNaN(detik)) return "-";
+  var m=Math.floor(detik/60), s=detik-m*60;
+  return m+":"+(s<10?"0":"")+s.toFixed(2);
+}
+function hitungKU(tglLahirStr){
+  if(!tglLahirStr) return "KU IV";
+  var str=String(tglLahirStr).trim(), d=null;
+  var iso=str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  var dmy=str.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+  if(iso) d=new Date(+iso[1],+iso[2]-1,+iso[3]);
+  else if(dmy) d=new Date(+dmy[3],+dmy[2]-1,+dmy[1]);
+  else return "KU IV";
+  if(isNaN(d.getTime())) return "KU IV";
+  var now=new Date(), umur=now.getFullYear()-d.getFullYear();
+  var md=now.getMonth()-d.getMonth(); if(md<0||(md===0&&now.getDate()<d.getDate())) umur--;
+  if(umur<0||umur>120) return "KU IV";
+  if(umur>=19) return "KU Senior"; if(umur>=16) return "KU I"; if(umur>=14) return "KU II";
+  if(umur>=12) return "KU III"; if(umur>=10) return "KU IV"; return "KU V";
+}
+
+/* ---------- dashboard / daftar atlet ---------- */
+function muatAwalSistem(isExplicitBack, paksaSegar){
+  panggilServer("getNamaAtletList",[getToken(), !!paksaSegar],{ pesan:"Memuat data atlet…", autoRetry:true, onSukses:function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    globalMasterAtletList=Array.isArray(res)?res:[];
+    atletTampilSemua=false;
+    renderDashboardStats(); renderAtletGrid(); renderHallOfFameTercepat(); renderHofMini();
+    if(isWali() && currentUserSession.atletKey && !isExplicitBack){
+      openAthleteProfile(currentUserSession.atletKey);
+    }
+    muatRingkasanBulan();
+  }});
+}
+function renderDashboardStats(){
+  var total=globalMasterAtletList.length;
+  $("statTotalAtlet").textContent=total+" Siswa";
+  $("txtJumlahAtlet").textContent=total+" atlet terdaftar";
+  var berPb=0, totalPb=0;
+  globalMasterAtletList.forEach(function(a){
+    var map=a.allPbMap||{}; var n=Object.keys(map).length;
+    if(n>0) berPb++; totalPb+=n;
+  });
+  $("statAtletPb").textContent=berPb;
+  $("statTotalPb").textContent=totalPb;
+}
+function muatRingkasanBulan(){
+  var box=$("ringkasanBulan"), sub=$("txtRingkasanBulan");
+  if(isWali()){
+    sub.textContent="Ringkasan anak Anda bulan ini.";
+    if(currentLoadedProfil){ renderProfilPresensiSppMini(); } else { box.innerHTML='<p class="empty">Buka rapot anak Anda untuk melihat ringkasan presensi &amp; SPP.</p>'; }
+    return;
+  }
+  sub.textContent="Rekap presensi bulan berjalan — 3 atlet paling disiplin.";
+  panggilBackend("getRekapPresensiAnalisis", [getToken(), bulanIniYM()]).then(function(res){
+    if(tanganiResError(res)) return;
+    var arr=Array.isArray(res)?res:[];
+    if(!arr.length){ box.innerHTML='<p class="empty">Belum ada data presensi bulan ini.</p>'; return; }
+    var h="";
+    arr.slice(0,3).forEach(function(r,i){
+      h+='<div class="act"><span class="ic '+(i===0?"gold":i===1?"blue":"green")+'"><b>'+(i+1)+'</b></span><div style="flex:1"><b>'+esc(r.namaAtlet||"-")+'</b><br><span class="muted small">'+(r.hadir||0)+' hadir · '+(r.izin||0)+' izin · '+(r.alpha||0)+' alpha</span></div><span class="pill '+( (r.persen||0)>=70?"ok":(r.persen||0)>=50?"wait":"danger")+'">'+(r.persen||0)+'%</span></div>';
+    });
+    box.innerHTML=h;
+  }, gagalServer);
+}
+function renderProfilPresensiSppMini(){
+  var box=$("ringkasanBulan");
+  panggilBackend("getAthleteData", [getToken(), currentUserSession.atletKey]).then(function(res){
+    if(tanganiResError(res)) return;
+    var p=res&&res.presensi?res.presensi:null, s=res&&res.spp?res.spp:null;
+    var h="";
+    if(p) h+='<div class="act"><span class="ic green">✓</span><div style="flex:1"><b>Presensi</b><br><span class="muted small">'+(p.hadir||0)+' hadir dari '+(p.totalSesi||0)+' sesi · '+(p.persen||0)+'%</span></div></div>';
+    if(s) h+='<div class="act"><span class="ic blue">Rp</span><div style="flex:1"><b>SPP bulan ini</b><br><span class="muted small">'+esc(s.statusBulanIni||"-")+'</span></div></div>';
+    box.innerHTML=h||'<p class="empty">Belum ada data presensi / SPP.</p>';
+  }, gagalServer);
+}
+function renderKuChips(){
+  var kus=["all","KU Senior","KU I","KU II","KU III","KU IV","KU V"];
+  var box=$("kuChips"); if(!box) return;
+  box.innerHTML=kus.map(function(k){ return '<button class="fchip'+(kuFilterAktif===k?" active":"")+'" onclick="setKuFilter(\''+k+'\')">'+(k==="all"?"Semua KU":k)+'</button>'; }).join("");
+}
+function setKuFilter(k){ kuFilterAktif=k; renderKuChips(); renderAtletGrid(); }
+function renderAtletGrid(){
+  renderKuChips();
+  var q=($("athleteSearch").value||"").toLowerCase().trim();
+  var list=globalMasterAtletList.filter(function(a){
+    var okKu=(kuFilterAktif==="all")||(hitungKU(a.tglLahir)===kuFilterAktif);
+    var okQ=!q||((a.lengkap||"").toLowerCase().includes(q)||(a.panggilan||"").toLowerCase().includes(q));
+    return okKu&&okQ;
+  });
+  var box=$("athleteGrid");
+  if(!list.length){ box.innerHTML='<p class="empty">Tidak ada atlet yang cocok.</p>'; $("containerLoadMore").hidden=true; return; }
+  var tampil=atletTampilSemua?list:list.slice(0,LIMIT_BARIS_PERTAMA);
+  var h="";
+  tampil.forEach(function(a){
+    h+='<div class="athlete-row" onclick="openAthleteProfile(\''+esc(a.panggilan).replace(/'/g,"\\'")+'\')">'+avatarFotoHtml(a.foto,a.lengkap)+
+      '<div style="flex:1;min-width:0"><b>'+esc(a.lengkap||"-")+'</b><br><span class="small muted">Panggilan: '+esc(a.panggilan||"-")+'</span></div>'+
+      '<span class="pill info">'+hitungKU(a.tglLahir)+'</span>'+
+      '<span class="btn sm">Buka Rapot →</span></div>';
+  });
+  box.innerHTML=h;
+  var sisa=list.length-tampil.length;
+  $("containerLoadMore").hidden=(sisa<=0);
+  if(sisa>0) $("btnLoadMore").textContent="Tampilkan Selengkapnya ("+sisa+" Atlet Lagi)";
+}
+function tampilkanLebihBanyakAtlet(){ atletTampilSemua=true; renderAtletGrid(); }
+
+/* ---------- Hall of Fame ---------- */
+function top3Pb(jarak, gaya){
+  var kunci=jarak+" "+gaya, arr=[];
+  globalMasterAtletList.forEach(function(a){
+    var map=a.allPbMap||{}; var pb=map[kunci];
+    if(pb && pb.detik!==undefined && pb.detik!==null) arr.push({nama:a.lengkap, panggilan:a.panggilan, ku:hitungKU(a.tglLahir), detik:pb.detik, waktuStr:pb.waktuStr||formatDetikKeMenit(pb.detik)});
+  });
+  arr.sort(function(x,y){ return x.detik-y.detik; });
+  return arr.slice(0,3);
+}
+function renderHallOfFameTercepat(){
+  var jarak=$("hofSelectJarak").value, gaya=$("hofSelectGaya").value;
+  $("statHofNomorDisplay").textContent=jarak+" "+gaya;
+  var top=top3Pb(jarak,gaya), box=$("hallOfFameContainer");
+  if(!top.length){ box.innerHTML='<p class="empty">Belum ada atlet yang memiliki catatan PB di nomor '+esc(jarak+" "+gaya)+'.</p>'; renderHofCatGrid(); return; }
+  var medalCls=["m1","m2","m3"], medalTxt=["🥇 1","🥈 2","🥉 3"];
+  var h='<div class="podium">';
+  var urutan=[1,0,2];
+  urutan.forEach(function(idx){
+    var t=top[idx]; if(!t) return;
+    h+='<div class="pod'+(idx===0?" first":"")+'"><div class="medal '+medalCls[idx]+'">'+medalTxt[idx]+'</div><div class="nm">'+esc(t.nama)+'</div><div class="tm">'+esc(t.waktuStr)+' dtk</div><div class="ku">'+esc(t.ku)+' · '+esc(t.panggilan)+'</div></div>';
+  });
+  h+='</div>';
+  box.innerHTML=h;
+  renderHofCatGrid();
+}
+function renderHofMini(){
+  var top=top3Pb("50m","FR"), box=$("hofMini");
+  if(!top.length){ box.innerHTML='<p class="empty">Belum ada PB 50m FR.</p>'; return; }
+  var h="";
+  top.forEach(function(t,i){
+    h+='<div class="act"><span class="ic '+(i===0?"gold":i===1?"blue":"green")+'"><b>'+(i+1)+'</b></span><div style="flex:1"><b>'+esc(t.nama)+'</b><br><span class="muted small">'+esc(t.ku)+'</span></div><span class="mono" style="font-weight:700">'+esc(t.waktuStr)+' dtk</span></div>';
+  });
+  box.innerHTML=h;
+}
+function renderHofCatGrid(){
+  var box=$("hofCatGrid"); if(!box) return;
+  var h="";
+  JARAK_LIST.forEach(function(j){
+    GAYA_LIST.forEach(function(g){
+      var top=top3Pb(j,g); var best=top.length?top[0]:null;
+      h+='<div class="cat" onclick="pilihKategoriHof(\''+j+'\',\''+g+'\')"><b>'+j+' '+g+' — '+esc(GAYA_NAMA[g]||g)+'</b><span>'+(best?("Tercepat: "+best.nama+" · "+best.waktuStr+" dtk"):"Belum ada PB")+'</span></div>';
+    });
+  });
+  box.innerHTML=h;
+}
+function pilihKategoriHof(jarak,gaya){ $("hofSelectJarak").value=jarak; $("hofSelectGaya").value=gaya; renderHallOfFameTercepat(); window.scrollTo({top:0}); }
+
+/* ---------- event terdekat ---------- */
+function editEventTerdekat(){
+  var cur=localStorage.getItem("ACS_EVENT_TERDEKAT")||"Kejurprov 2026";
+  showPrompt("Event Terdekat","Nama event / kejuaraan terdekat (disimpan di perangkat ini).",cur,"cth: Kejurprov 2026").then(function(v){
+    if(v===null) return;
+    localStorage.setItem("ACS_EVENT_TERDEKAT", v.trim());
+    $("txtNamaEventTerdekat").textContent=v.trim()||"—";
+    toast("Event terdekat diperbarui.");
+  });
+}
+
+/* ---------- RAPOT ATLET ---------- */
+function openAthleteProfile(namaPanggilan){
+  panggilServer("getAthleteData",[getToken(), namaPanggilan],{ pesan:"Membuka rapot digital "+namaPanggilan+"…", autoRetry:true, onSukses:function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    currentLoadedProfil=res.profil||null;
+    globalRiwayat=res.riwayat||[];
+    globalBestTimes=res.bestTimes||{};
+    renderProfilePage(res);
+    navKe("rapot");
+  }});
+}
+function kalkulasiGayaTerbaik(){
+  var best=null, bestVal=Infinity;
+  Object.keys(globalBestTimes||{}).forEach(function(nomor){
+    var m=String(nomor).match(/(\d+)\s*m\s*(\w+)/i); if(!m) return;
+    var detik=parseKeDetikMurni(globalBestTimes[nomor]);
+    if(!detik) return;
+    var per50=detik/(parseInt(m[1],10)/50);
+    if(per50<bestVal){ bestVal=per50; best={nomor:nomor, gaya:m[2].toUpperCase(), detik:detik}; }
+  });
+  if(!best) return "Belum memiliki rekam rekor";
+  return "Gaya terbaik: "+(GAYA_NAMA[best.gaya]||best.gaya)+" ("+best.nomor+" — "+globalBestTimes[best.nomor]+")";
+}
+function renderProfilePage(res){
+  var p=res.profil||{};
+  $("txtRapotJudul").textContent="Rapot — "+(p.namaLengkap||p.namaPanggilan||"");
+  var foto=p.fotoBase64||"";
+  fotoProfilLama=foto;
+  var h="";
+  h+='<div class="card"><div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">';
+  h+='<div style="cursor:pointer" onclick="zoomFoto(\''+esc(foto).replace(/'/g,"")+'\',\''+esc(p.namaLengkap||"")+'\')">'+avatarFotoHtml(foto,p.namaLengkap,"lg")+'</div>';
+  h+='<div style="flex:1;min-width:220px"><h2 style="font-size:20px">'+esc(p.namaLengkap||"-")+'</h2><p class="muted small">Panggilan: <b>'+esc(p.namaPanggilan||"-")+'</b> · '+hitungKU(p.tglLahir)+'</p>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">';
+  h+='<span class="pill">'+esc(p.gender||"-")+'</span>';
+  h+='<span class="pill">NISN: '+esc(p.nisn||"-")+'</span>';
+  h+='<span class="pill">NIK: '+esc(p.nik||"-")+'</span>';
+  h+='<span class="pill">Lahir: '+esc(p.tglLahir||"-")+'</span>';
+  if(p.noHp) h+='<span class="pill">HP Wali: '+esc(p.noHp)+'</span>';
+  h+='</div><p class="small" style="margin-top:8px;color:var(--accent);font-weight:700">'+esc(kalkulasiGayaTerbaik())+'</p></div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap" class="hanya-pelatih"><button class="btn" onclick="editAtletIni()">✏️ Edit Profil</button><button class="btn" onclick="bukaModalKarakter()">📝 Input Karakter</button></div>';
+  h+='</div></div>';
+  /* Karakter */
+  var k=res.karakter||{disiplin:80,fokus:80,dayaJuang:80,catatanPelatih:"Belum ada catatan."};
+  h+='<div class="card"><h3>Evaluasi Karakter</h3><div class="sub">Penilaian pelatih (0–100).</div>';
+  [["Disiplin",k.disiplin],["Fokus",k.fokus],["Daya Juang",k.dayaJuang]].forEach(function(row){
+    h+='<div class="bar-row"><span>'+row[0]+'</span><div class="bar-track"><div class="bar-fill" style="width:'+(row[1]||0)+'%"></div></div><b class="mono">'+(row[1]||0)+'</b></div>';
+  });
+  h+='<p class="small muted" style="margin-top:8px">Catatan pelatih: '+esc(k.catatanPelatih||"Belum ada catatan.")+'</p>';
+  h+='<div class="hidden"><span id="lblDisiplin">'+(k.disiplin||80)+'</span><span id="lblFokus">'+(k.fokus||80)+'</span><span id="lblDayaJuang">'+(k.dayaJuang||80)+'</span><span id="txtCatatanKarakter">'+esc(k.catatanPelatih||"Belum ada catatan.")+'</span></div>';
+  h+='</div>';
+  /* PB grid */
+  h+='<div class="card"><h3>Personal Best (PB)</h3><div class="sub">Waktu terbaik per nomor lomba.</div><div class="pb-grid" id="pbGrid">';
+  var keys=Object.keys(globalBestTimes||{}).sort();
+  if(!keys.length) h+='<p class="empty">Belum ada catatan waktu.</p>';
+  keys.forEach(function(nomor){ h+='<div class="pb"><div class="no">'+esc(nomor)+'</div><div class="tm">'+esc(globalBestTimes[nomor])+'</div></div>'; });
+  h+='</div></div>';
+  /* Grafik + riwayat */
+  h+='<div class="card"><h3>Grafik Progres &amp; Riwayat Waktu</h3><div class="sub">Pilih nomor untuk melihat grafik &amp; tabel riwayat.</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">';
+  h+='<select id="selectJarak" class="input" style="width:110px" onchange="filterGrafikDanTabel()">'+JARAK_LIST.map(function(j){ return '<option'+(j==="50m"?" selected":"")+'>'+j+'</option>'; }).join("")+'</select>';
+  h+='<select id="selectGaya" class="input" style="width:100px" onchange="filterGrafikDanTabel()">'+GAYA_LIST.map(function(g){ return '<option>'+g+'</option>'; }).join("")+'</select>';
+  h+='<select id="selectKategoriGrafik" class="input" style="width:130px" onchange="filterGrafikDanTabel()"><option value="all">Semua</option><option value="Latihan">Latihan</option><option value="Kejuaraan">Kejuaraan</option></select>';
+  h+='<select id="selectLimitSesi" class="input" style="width:110px" onchange="filterGrafikDanTabel()"><option value="5">5 sesi</option><option value="10" selected>10 sesi</option><option value="20">20 sesi</option><option value="all">Semua</option></select>';
+  h+='<span style="flex:1"></span><button class="btn primary hanya-pelatih" onclick="bukaPanelWaktu()">+ Input Waktu</button>';
+  h+='</div><div class="chart-box" id="chartBox"><p class="empty" id="emptyChartMsg">Pilih nomor lomba untuk melihat grafik.</p><svg id="myChart" width="100%" height="220" viewBox="0 0 600 220" preserveAspectRatio="none" style="display:none"></svg></div>';
+  h+='<div class="tbl-wrap" style="margin-top:12px"><table class="tbl"><thead><tr><th>Tanggal</th><th>Nomor</th><th>Waktu</th><th>Status</th><th></th></tr></thead><tbody id="tabelRiwayatBody"></tbody></table></div>';
+  h+='</div>';
+  /* Presensi + SPP ringkas */
+  h+='<div class="grid2"><div class="card"><h3>Presensi</h3><div class="sub">Ringkasan kehadiran atlet ini.</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;margin-bottom:10px">';
+  h+='<div><div class="small muted">Sesi</div><b id="txtPresensiTotal">-</b></div><div><div class="small muted">Hadir</div><b id="txtPresensiHadir">-</b></div><div><div class="small muted">Izin</div><b id="txtPresensiIzin">-</b></div><div><div class="small muted">Alpha</div><b id="txtPresensiAlpha">-</b></div></div>';
+  h+='<p class="small">Kehadiran: <b id="txtPresensiPersen">-</b></p><div id="presensiRiwayatList" style="margin-top:10px"></div>';
+  h+='<button class="btn sm" style="margin-top:10px" onclick="muatRiwayatPresensiAtlet()">Muat Riwayat Presensi</button></div>';
+  h+='<div class="card"><h3>SPP</h3><div class="sub">Status iuran bulan ini &amp; histori.</div>';
+  h+='<p class="small">Status bulan ini: <b id="txtSppStatus">-</b></p><div id="sppHistoriList" style="margin-top:10px"></div>';
+  h+='<button class="btn sm" style="margin-top:10px" onclick="muatHistoriSppAtlet()">Muat Histori SPP</button></div></div>';
+  $("profileContent").innerHTML=h;
+  terapkanHakAksesUser();
+  renderProfilPresensiSpp(res, true);
+  filterGrafikDanTabel();
+}
+function renderChartSvg(points){
+  var svg=$("myChart"); if(!svg) return;
+  var W=600,H=220,PAD=28;
+  if(!points.length){ svg.style.display="none"; $("emptyChartMsg").style.display="block"; return; }
+  $("emptyChartMsg").style.display="none"; svg.style.display="block";
+  var vals=points.map(function(p){ return p.detik; });
+  var min=Math.min.apply(null,vals), max=Math.max.apply(null,vals);
+  if(min===max){ min-=1; max+=1; }
+  function X(i){ return PAD+(i*(W-2*PAD)/Math.max(points.length-1,1)); }
+  function Y(v){ return PAD+((max-v)/(max-min))*(H-2*PAD); }
+  var out="";
+  [0,1,2,3].forEach(function(i){ var y=PAD+i*(H-2*PAD)/3; var val=max-i*(max-min)/3; out+='<line x1="'+PAD+'" y1="'+y+'" x2="'+(W-PAD)+'" y2="'+y+'" stroke="var(--line)" stroke-width="1"/><text x="4" y="'+(y+4)+'" font-size="10" fill="var(--ink-3)">'+formatDetikKeMenit(val)+'</text>'; });
+  var lat=points.filter(function(p){ return p.status==="Latihan"; });
+  var kej=points.filter(function(p){ return p.status!=="Latihan"; });
+  function pathFor(list,color){
+    if(list.length<1) return "";
+    var d=""; list.forEach(function(p,i){ var xi=X(points.indexOf(p)); d+=(i===0?"M":"L")+xi.toFixed(1)+" "+Y(p.detik).toFixed(1)+" "; });
+    var dots=list.map(function(p){ var xi=X(points.indexOf(p)); return '<circle cx="'+xi.toFixed(1)+'" cy="'+Y(p.detik).toFixed(1)+'" r="4" fill="'+color+'"/>'; }).join("");
+    return '<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="2.5"/>'+dots;
+  }
+  out+=pathFor(lat,"#00d4b2")+pathFor(kej,"#f59e0b");
+  out+='<text x="'+PAD+'" y="'+(H-4)+'" font-size="10" fill="var(--ink-3)">'+esc(points[0].tanggal||"")+'</text>';
+  out+='<text x="'+(W-PAD-70)+'" y="'+(H-4)+'" font-size="10" fill="var(--ink-3)">'+esc(points[points.length-1].tanggal||"")+'</text>';
+  svg.innerHTML=out;
+}
+function filterGrafikDanTabel(){
+  var jarak=$("selectJarak")?$("selectJarak").value:"50m";
+  var gaya=$("selectGaya")?$("selectGaya").value:"FR";
+  var kat=$("selectKategoriGrafik")?$("selectKategoriGrafik").value:"all";
+  var lim=$("selectLimitSesi")?$("selectLimitSesi").value:"10";
+  var nomor=jarak+" "+gaya;
+  var rows=(globalRiwayat||[]).filter(function(r){
+    if((r.nomorLomba||"")!==nomor) return false;
+    if(kat==="Latihan") return r.status==="Latihan";
+    if(kat==="Kejuaraan") return r.status!=="Latihan";
+    return true;
+  });
+  rows.sort(function(a,b){ return String(b.tanggal||"").localeCompare(String(a.tanggal||"")); });
+  var pbDetik=parseKeDetikMurni(globalBestTimes[nomor]||"");
+  var tampil=(lim==="all")?rows:rows.slice(0,parseInt(lim,10)||10);
+  var tb=$("tabelRiwayatBody");
+  if(!tampil.length){ tb.innerHTML='<tr><td colspan="5" class="empty">Belum ada riwayat untuk nomor ini.</td></tr>'; }
+  else{
+    var h="";
+    tampil.forEach(function(r){
+      var det=parseKeDetikMurni(r.waktu||"");
+      var isBest=(pbDetik&&det&&Math.abs(det-pbDetik)<0.01);
+      var aksi="";
+      if(isPelatih()&&r.rowIndex){
+        aksi='<button class="btn sm" onclick="editWaktuHistori('+r.rowIndex+',\''+esc(r.nomorLomba||"")+'\',\''+esc(r.tanggal||"")+'\',\''+esc(r.waktu||"")+'\',\''+esc(r.status||"Latihan")+'\')">Edit</button> <button class="btn sm danger" onclick="hapusWaktuHistori('+r.rowIndex+')">Hapus</button>';
+      }
+      h+='<tr><td>'+esc(r.tanggal||"-")+'</td><td>'+esc(r.nomorLomba||"-")+'</td><td class="mono" style="font-weight:700">'+esc(r.waktu||"-")+(isBest?' <span class="pill ok">BEST</span>':"")+'</td><td>'+esc(r.status||"-")+'</td><td style="white-space:nowrap">'+aksi+'</td></tr>';
+    });
+    tb.innerHTML=h;
+  }
+  var pts=tampil.slice().reverse().map(function(r){ return {tanggal:r.tanggal, detik:parseKeDetikMurni(r.waktu||""), status:r.status||"Latihan"}; }).filter(function(p){ return p.detik>0; });
+  renderChartSvg(pts);
+}
+function editWaktuHistori(rowIndex, nomorLomba, tanggal, waktu, status){
+  var m=String(nomorLomba||"").match(/(\d+m)\s*(\w+)/);
+  navKe("input");
+  $("wktRowIndex").value=rowIndex;
+  if(currentLoadedProfil){ $("wktNamaHidden").value=currentLoadedProfil.namaPanggilan; $("wktNamaInput").value=(currentLoadedProfil.namaLengkap||"")+" ("+currentLoadedProfil.namaPanggilan+")"; }
+  if(m){ $("inputJarak").value=m[1]; $("inputGaya").value=m[2]; }
+  $("wktTanggal").value=formatKeValidDate(tanggal);
+  $("wktWaktu").value=waktu;
+  $("wktStatus").value=status||"Latihan";
+  $("wktModalTitle").textContent="Edit Waktu (baris #"+rowIndex+")";
+  window.scrollTo({top:0});
+}
+function hapusWaktuHistori(rowIndex){
+  if(!isPelatih()) return;
+  showConfirm("Hapus Waktu Ini?","Baris riwayat waktu ini akan dihapus permanen.","Ya, Hapus").then(function(ya){
+    if(!ya) return;
+    panggilServer("hapusWaktuLatihan",[getToken(), rowIndex],{ pesan:"Menghapus waktu…", autoRetry:false, onSukses:function(res){
+      showLoading(false);
+      if(tanganiResError(res)) return;
+      toast(res.success||"Waktu berhasil dihapus.");
+      if(currentLoadedProfil) openAthleteProfile(currentLoadedProfil.namaPanggilan); else muatAwalSistem();
+    }});
+  });
+}
+function zoomFoto(foto, nama){
+  if(!foto){ toast("Tidak ada foto."); return; }
+  $("imgZoomTarget").src=foto; $("txtZoomCaption").textContent=nama||"";
+  bukaModal("fotoZoomModal");
+}
+
+/* ---------- presensi & SPP ringkas di rapot ---------- */
+function renderProfilPresensiSpp(res, allowFallback){
+  if(allowFallback===undefined) allowFallback=true;
+  var p=(res&&res.presensi)?res.presensi:null;
+  var s=(res&&res.spp)?res.spp:null;
+  function isi(id,val){ var el=$(id); if(el) el.innerText=(val===undefined||val===null||val==="")?"-":String(val); }
+  isi("txtPresensiTotal", p?p.totalSesi:null);
+  isi("txtPresensiHadir", p?p.hadir:null);
+  isi("txtPresensiIzin", p?p.izin:null);
+  isi("txtPresensiAlpha", p?p.alpha:null);
+  isi("txtPresensiPersen", p?((p.persen===undefined||p.persen===null)?null:p.persen+"%"):null);
+  var listEl=$("presensiRiwayatList");
+  if(listEl){
+    var riw=p?(p.riwayat10||p.riwayat||[]):[];
+    if(!riw||!riw.length){ listEl.innerHTML='<p class="small muted" style="font-style:italic">-</p>'; }
+    else{
+      var h="", pelatih=isPelatih();
+      riw.forEach(function(r){
+        var btn=(pelatih&&r.rowIndex)?' <button class="btn sm danger" onclick="hapusPresensiBaris('+r.rowIndex+')">Hapus</button>':"";
+        h+='<div class="act"><span class="small muted">'+esc(r.tanggal||r.date||"-")+'</span><span style="flex:1"></span><b style="color:var(--accent)">'+esc(r.status||r.kehadiran||"-")+'</b>'+btn+'</div>';
+      });
+      listEl.innerHTML=h;
+    }
+  }
+  isi("txtSppStatus", s?(s.statusBulanIni||s.status||null):null);
+  var sppEl=$("sppHistoriList");
+  if(sppEl){
+    var hist=s?(s.histori||s.riwayat||[]):[];
+    if(!hist||!hist.length){ sppEl.innerHTML='<p class="small muted" style="font-style:italic">-</p>'; }
+    else{
+      var hh="";
+      hist.slice(0,6).forEach(function(it){
+        hh+='<div class="act"><span class="small muted">'+esc(it.bulanTahun||it.bulan||"-")+'</span><span style="flex:1"></span><b style="color:var(--amber)">'+esc(it.status||"-")+'</b></div>';
+      });
+      sppEl.innerHTML=hh;
+    }
+  }
+  if(allowFallback && !p && currentLoadedProfil){
+    panggilBackend("getStatistikPresensiAtlet", [getToken(), currentLoadedProfil.namaPanggilan]).then(function(stat){
+      if(tanganiResError(stat)) return;
+      if(stat) renderProfilPresensiSpp({presensi:stat, spp:(res&&res.spp)?res.spp:null}, false);
+    }, gagalServer);
+  }
+  if(allowFallback && !s && currentLoadedProfil){
+    panggilBackend("getHistoriSppSpesifikAtlet", [getToken(), currentLoadedProfil.namaPanggilan]).then(function(hist2){
+      if(tanganiResError(hist2)) return;
+      var arr=Array.isArray(hist2)?hist2:(hist2&&(hist2.histori||hist2.data))||[];
+      renderProfilPresensiSpp({presensi:(res&&res.presensi)?res.presensi:null, spp:{statusBulanIni:"-", histori:arr}}, false);
+    }, gagalServer);
+  }
+}
+function hapusPresensiBaris(rowIndex){
+  if(!isPelatih()) return;
+  showConfirm("Hapus Presensi Ini?","Baris presensi ini akan dihapus permanen dari database.","Ya, Hapus").then(function(ya){
+    if(!ya) return;
+    panggilServer("hapusPresensi",[getToken(), rowIndex],{ pesan:"Menghapus presensi…", autoRetry:false, onSukses:function(res){
+      showLoading(false);
+      if(tanganiResError(res)) return;
+      toast(res.success||"Presensi berhasil dihapus.");
+      muatRiwayatPresensiAtlet();
+    }});
+  });
+}
+function muatRiwayatPresensiAtlet(){
+  if(!currentLoadedProfil) return;
+  showLoading(true,"Memuat riwayat presensi…");
+  panggilBackend("getHistoryPresensiSpesifikAtlet", [getToken(), currentLoadedProfil.namaPanggilan]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    var arr=Array.isArray(res)?res:(res&&(res.riwayat||res.data||res.histori))||[];
+    if(res&&typeof res==="object"&&res.total!==undefined){
+      var isiStat=function(id,v){ var e=$(id); if(e) e.innerText=String(v); };
+      isiStat("txtPresensiTotal",(res.totalSesi!==undefined)?res.totalSesi:res.total);
+      isiStat("txtPresensiHadir",res.hadir||0); isiStat("txtPresensiIzin",res.izin||0);
+      isiStat("txtPresensiAlpha",res.alpha||0);
+      isiStat("txtPresensiPersen",((res.persen!==undefined&&res.persen!==null)?res.persen:0)+"%");
+    }
+    var listEl=$("presensiRiwayatList"); if(!listEl) return;
+    if(!arr.length){ listEl.innerHTML='<p class="small muted" style="font-style:italic">Belum ada riwayat presensi.</p>'; return; }
+    var h="", pelatih=isPelatih();
+    arr.forEach(function(r){
+      var btn=(pelatih&&r.rowIndex)?' <button class="btn sm danger" onclick="hapusPresensiBaris('+r.rowIndex+')">Hapus</button>':"";
+      h+='<div class="act"><span class="small muted">'+esc(r.tanggal||r.date||"-")+'</span><span style="flex:1"></span><b style="color:var(--accent)">'+esc(r.status||r.kehadiran||"-")+'</b>'+btn+'</div>';
+    });
+    listEl.innerHTML=h;
+  }, gagalServer);
+}
+function muatHistoriSppAtlet(){
+  var nama=currentLoadedProfil?currentLoadedProfil.namaPanggilan:(isWali()?currentUserSession.atletKey:"");
+  if(!nama) return;
+  showLoading(true,"Memuat histori SPP…");
+  panggilBackend("getHistoriSppSpesifikAtlet", [getToken(), nama]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    var arr=Array.isArray(res)?res:(res&&(res.histori||res.data))||[];
+    var sppEl=$("sppHistoriList"); if(!sppEl) return;
+    if(!arr.length){ sppEl.innerHTML='<p class="small muted" style="font-style:italic">Belum ada histori SPP.</p>'; return; }
+    var h="";
+    arr.forEach(function(it){
+      h+='<div class="act"><span class="small muted">'+esc(it.bulanTahun||it.bulan||"-")+'</span><span style="flex:1"></span><b style="color:var(--amber)">'+esc(it.status||"-")+'</b></div>';
+    });
+    sppEl.innerHTML=h;
+  }, gagalServer);
+}
+
+/* ---------- admin profil atlet (tambah / edit / hapus) ---------- */
+function bukaPanelAdmin(){
+  $("txtAdminJudul").textContent="Tambah Atlet Baru";
+  $("btnHapusAtlet").classList.add("hidden");
+  $("admKey").disabled=false; $("admKey").value=""; $("admNama").value=""; $("admNisn").value=""; $("admNik").value="";
+  $("admTgl").value=""; $("admFoto").value=""; $("admNoHp").value=""; $("txtFotoLama").textContent="";
+  bukaModal("adminModal");
+}
+function editAtletIni(){
+  if(!currentLoadedProfil) return;
+  $("txtAdminJudul").textContent="Edit Profil Atlet";
+  $("admKey").value=currentLoadedProfil.namaPanggilan||""; $("admKey").disabled=true;
+  $("admNama").value=currentLoadedProfil.namaLengkap||"";
+  $("admGender").value=currentLoadedProfil.gender||"Laki-laki";
+  $("admTgl").value=formatKeValidDate(currentLoadedProfil.tglLahir);
+  $("admNisn").value=(currentLoadedProfil.nisn&&currentLoadedProfil.nisn!=="-")?currentLoadedProfil.nisn:"";
+  $("admNik").value=(currentLoadedProfil.nik&&currentLoadedProfil.nik!=="-")?currentLoadedProfil.nik:"";
+  $("admNoHp").value=currentLoadedProfil.noHp||"";
+  $("admFoto").value=""; $("txtFotoLama").textContent=fotoProfilLama?"Foto lama tersimpan — kosongkan bila tidak ingin mengganti.":"Belum ada foto.";
+  $("btnHapusAtlet").classList.toggle("hidden", !isPelatih());
+  bukaModal("adminModal");
+}
+function hapusAtletIni(){
+  if(!currentLoadedProfil||!currentLoadedProfil.namaPanggilan) return;
+  if(!isPelatih()) return;
+  var kunci=currentLoadedProfil.namaPanggilan, nama=currentLoadedProfil.namaLengkap||kunci;
+  showConfirm("Hapus Atlet Permanen?","Profil "+nama+" ("+kunci+") beserta akun wali, riwayat waktu, presensi, SPP, dan pendaftarannya akan dihapus PERMANEN dan tidak bisa dikembalikan.","Ya, Hapus Permanen").then(function(ya){
+    if(!ya) return;
+    panggilServer("hapusAtlet",[getToken(), kunci],{ pesan:"Menghapus atlet…", autoRetry:false, onSukses:function(res){
+      showLoading(false);
+      if(tanganiResError(res)) return;
+      tutupModal("adminModal");
+      toast(res.success||"Atlet berhasil dihapus.");
+      currentLoadedProfil=null; muatAwalSistem(true,true); backToDashboard();
+    }});
+  });
+}
+function prosesSimpanAdmin(){
+  var key=$("admKey").value.toUpperCase().trim(), nama=$("admNama").value.trim(), rawTgl=$("admTgl").value;
+  if(!key||!nama){ showAlert("Perhatian","Nama Panggilan & Nama Lengkap wajib diisi!"); return; }
+  showLoading(true,"Mengompresi Foto & Menyimpan Biodata…");
+  var fileInput=$("admFoto");
+  if(fileInput&&fileInput.files.length>0){
+    kompresGambarBase64(fileInput.files[0],600,600,0.7,function(b64){ kirimDataAdminKeBackend(key,nama,rawTgl,b64); });
+  } else {
+    /* v13: bila edit tanpa foto baru, kirim foto lama agar tidak tertimpa "" (ketidakcocokan v12.1 F.4.6) */
+    kirimDataAdminKeBackend(key,nama,rawTgl, $("admKey").disabled?fotoProfilLama:"");
+  }
+}
+function kirimDataAdminKeBackend(key,nama,rawTgl,base64Data){
+  var paket={namaPanggilan:key, namaLengkap:nama, gender:$("admGender").value, nisn:$("admNisn").value, nik:$("admNik").value, noHp:$("admNoHp").value, tglLahir:formatKeIndo(rawTgl), fotoBase64:base64Data||""};
+  panggilBackend("simpanProfilAtlet", [getToken(), paket]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    tutupModal("adminModal");
+    toast(res.success||"Biodata tersimpan.");
+    if(currentLoadedProfil) openAthleteProfile(key); else { muatAwalSistem(true,true); backToDashboard(); }
+  }, gagalServer);
+}
+function bukaModalKarakter(){
+  if(!currentLoadedProfil) return;
+  $("sldDisiplin").value=$("lblDisiplin")?$("lblDisiplin").innerText:"80";
+  $("sldFokus").value=$("lblFokus")?$("lblFokus").innerText:"80";
+  $("sldDayaJuang").value=$("lblDayaJuang")?$("lblDayaJuang").innerText:"80";
+  $("valDisiplin").innerText=$("sldDisiplin").value; $("valFokus").innerText=$("sldFokus").value; $("valDayaJuang").innerText=$("sldDayaJuang").value;
+  var cat=$("txtCatatanKarakter")?$("txtCatatanKarakter").innerText:"";
+  $("txtInputEvaluasi").value=(cat==="Belum ada catatan.")?"":cat;
+  bukaModal("karakterModal");
+}
+function prosesSimpanKarakter(){
+  if(!currentLoadedProfil) return;
+  showLoading(true,"Mengirim Evaluasi Karakter ke Sheets…");
+  var paket={namaAtlet:currentLoadedProfil.namaPanggilan, disiplin:$("sldDisiplin").value, fokus:$("sldFokus").value, dayaJuang:$("sldDayaJuang").value, catatanPelatih:$("txtInputEvaluasi").value};
+  panggilBackend("simpanCatatanKarakter", [getToken(), paket]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    tutupModal("karakterModal");
+    toast(res.success||"Evaluasi tersimpan.");
+    openAthleteProfile(currentLoadedProfil.namaPanggilan);
+  }, gagalServer);
+}
+
+/* ---------- kompres foto ---------- */
+function kompresGambarBase64(file, maxWidth, maxHeight, quality, callback){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width, h=img.height;
+      var scale=Math.min(1, maxWidth/w, maxHeight/h);
+      var canvas=document.createElement("canvas");
+      canvas.width=Math.round(w*scale); canvas.height=Math.round(h*scale);
+      canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+      callback(canvas.toDataURL("image/jpeg", quality||0.7));
+    };
+    img.onerror=function(){ callback(""); };
+    img.src=e.target.result;
+  };
+  reader.onerror=function(){ callback(""); };
+  reader.readAsDataURL(file);
+}
+
+/* ---------- PRESENSI (view) ---------- */
+function siapkanViewPresensi(){
+  if(isWali()){
+    $("presensiCoachWrap").hidden=true;
+    $("txtIzinJudul").textContent="Izin Latihan — Anak Anda";
+    $("txtIzinSub").textContent="Kirim surat izin latihan untuk anak Anda.";
+    $("izinNamaAtlet").value=currentUserSession.atletKey||"";
+    $("izinNamaAtlet").readOnly=true;
+    $("izinListContainer").innerHTML="";
+  } else {
+    $("presensiCoachWrap").hidden=false;
+    $("txtIzinJudul").textContent="Izin Latihan";
+    $("txtIzinSub").textContent="Wali mengirim surat izin untuk anaknya. Pelatih melihat daftar izin yang masuk.";
+    $("izinNamaAtlet").readOnly=false;
+    if(currentLoadedProfil) $("izinNamaAtlet").value=currentLoadedProfil.namaPanggilan;
+    muatDaftarIzinLatihan();
+  }
+  $("izinTanggal").value=hariIniISO();
+  muatChecklistPresensi();
+}
+function setTabPresensi(tab){
+  $("tabPresensiManual").classList.toggle("active", tab==="manual");
+  $("tabPresensiQr").classList.toggle("active", tab==="qr");
+  $("panelPresensiManual").hidden=(tab!=="manual");
+  $("panelPresensiQr").hidden=(tab!=="qr");
+}
+function muatChecklistPresensi(){
+  var q=(($("presensiSearch")||{}).value||"").toLowerCase().trim();
+  var list=globalMasterAtletList.filter(function(a){
+    return !q||((a.lengkap||"").toLowerCase().includes(q)||(a.panggilan||"").toLowerCase().includes(q));
+  });
+  var box=$("presensiChecklist");
+  if(!list.length){ box.innerHTML='<p class="empty">Tidak ada atlet yang cocok.</p>'; return; }
+  var h="";
+  list.forEach(function(a){
+    var key=esc(a.panggilan).replace(/'/g,"\\'");
+    h+='<div class="athlete-row" style="cursor:default">'+avatarHtml(a.lengkap)+
+      '<div style="flex:1;min-width:0"><b>'+esc(a.lengkap||"-")+'</b><br><span class="small muted">'+hitungKU(a.tglLahir)+' · '+esc(a.panggilan||"")+'</span></div>'+
+      '<select class="input" style="width:110px" id="presStatus-'+esc(a.panggilan)+'"><option>Hadir</option><option>Izin</option><option>Alpha</option></select>'+
+      '<button class="btn sm primary" onclick="simpanPresensiAtlet(\''+key+'\', document.getElementById(\'presStatus-'+esc(a.panggilan)+'\').value, \'Checklist Manual\')">Simpan</button></div>';
+  });
+  box.innerHTML=h;
+}
+function simpanPresensiAtlet(nama, status, catatan){
+  panggilServer("simpanPresensiSatuAtlet",[getToken(), String(nama).toUpperCase(), status, catatan||""],{ pesan:"Menyimpan presensi…", autoRetry:false, onSukses:function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    toast(res.success||"Presensi tersimpan.");
+  }});
+}
+function prosesQrPresensi(){
+  var input=$("presensiQrFile");
+  if(!input.files||!input.files.length) return;
+  var file=input.files[0];
+  if(window.BarcodeDetector){
+    var det=new BarcodeDetector({formats:["qr_code"]});
+    createImageBitmap(file).then(function(bmp){
+      return det.detect(bmp);
+    }).then(function(codes){
+      if(codes&&codes.length){
+        var nama=String(codes[0].rawValue||"").toUpperCase().trim();
+        $("presensiQrHasil").textContent="QR terbaca: "+nama+" — menyimpan sebagai Hadir…";
+        simpanPresensiAtlet(nama,"Hadir","Scan QR");
+      } else { fallbackQrManual(false); }
+    }).catch(function(){ fallbackQrManual(false); });
+  } else { fallbackQrManual(false); }
+}
+function fallbackQrManual(dariTombol){
+  var nama="";
+  if(dariTombol){ nama=($("presensiQrNamaManual").value||"").toUpperCase().trim(); }
+  if(!nama){
+    showPrompt("Nama Atlet (QR Manual)","Isi nama panggilan atlet yang hadir.", "", "cth: BAGUS").then(function(v){
+      if(v===null||!v.trim()) return;
+      simpanPresensiAtlet(v.trim(),"Hadir","Scan QR / Manual");
+    });
+    return;
+  }
+  simpanPresensiAtlet(nama,"Hadir","Scan QR / Manual");
+}
+function muatRekapPresensi(){
+  var bulan=$("rekapPresensiBulan").value;
+  if(!bulan){ showAlert("Perhatian","Pilih bulan dulu."); return; }
+  showLoading(true,"Memuat rekap presensi…");
+  panggilBackend("getRekapPresensiAnalisis", [getToken(), bulan]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    var arr=Array.isArray(res)?res:[];
+    var box=$("rekapPresensiHasil");
+    if(!arr.length){ box.innerHTML='<p class="empty">Belum ada data presensi bulan ini.</p>'; return; }
+    var h='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Atlet</th><th>Sesi</th><th>Hadir</th><th>Izin</th><th>Alpha</th><th>%</th><th>Kategori</th></tr></thead><tbody>';
+    arr.forEach(function(r){
+      /* v13: server hanya kirim namaAtlet (panggilan) — tampilkan apa adanya (perbaikan F.4.3) */
+      var nama=r.namaLengkap||r.nama||r.namaAtlet||"-";
+      var kat=r.kategori||(((r.persen||0)>=70)?"Sangat Disiplin":((r.persen||0)>=50)?"Cukup Aktif":"Perlu Perhatian");
+      h+='<tr><td><b>'+esc(nama)+'</b></td><td>'+(r.totalSesi||0)+'</td><td>'+(r.hadir||0)+'</td><td>'+(r.izin||0)+'</td><td>'+(r.alpha||0)+'</td><td class="mono"><b>'+(r.persen||0)+'%</b></td><td><span class="pill '+(kat==="Sangat Disiplin"?"ok":kat==="Cukup Aktif"?"wait":"danger")+'">'+esc(kat)+'</span></td></tr>';
+    });
+    h+='</tbody></table></div>';
+    box.innerHTML=h;
+  }, gagalServer);
+}
+function bukaModalIzinLatihan(){ navKe("presensi"); }
+function kirimIzinLatihan(){
+  var nama=($("izinNamaAtlet").value||"").toUpperCase().trim();
+  var tgl=$("izinTanggal").value, alasan=$("izinAlasan").value.trim();
+  if(!nama||!tgl||!alasan){ showAlert("Perhatian","Nama atlet, tanggal, dan alasan wajib diisi."); return; }
+  var paket={namaAtlet:nama, tanggal:formatKeIndo(tgl), alasan:alasan};
+  showLoading(true,"Mengirim surat izin…");
+  panggilBackend("kirimIzinLatihanWali", [getToken(), paket]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    toast(res.success||"Surat izin berhasil dikirim.");
+    $("izinAlasan").value="";
+    if(isPelatih()) muatDaftarIzinLatihan();
+  }, gagalServer);
+}
+function muatDaftarIzinLatihan(){
+  panggilBackend("getDaftarIzinLatihan", [getToken()]).then(function(res){
+    if(tanganiResError(res)) return;
+    var arr=Array.isArray(res)?res:[];
+    var box=$("izinListContainer"); if(!box) return;
+    if(!arr.length){ box.innerHTML='<p class="small muted" style="font-style:italic">Belum ada surat izin masuk.</p>'; return; }
+    var h='<h3 style="font-size:14px;margin-bottom:8px">Daftar Izin Masuk</h3>';
+    arr.slice(0,20).forEach(function(r){
+      /* v13: server kirim `catatan`, bukan `alasan` (perbaikan F.4.2) */
+      h+='<div class="act"><span class="ic blue">✉</span><div style="flex:1"><b>'+esc(r.namaAtlet||"-")+'</b> · '+esc(r.tanggal||"-")+'<br><span class="muted small">'+esc(r.catatan||r.alasan||"-")+'</span></div><span class="pill info">'+esc(r.status||"Izin")+'</span></div>';
+    });
+    box.innerHTML=h;
+  }, gagalServer);
+}
+
+/* ---------- SPP (view) ---------- */
+function siapkanViewSpp(){
+  $("sppBulan").value=bulanIniYM();
+  $("sppCoachBulan").value=bulanIniYM();
+  $("sppMatriksTahun").value=new Date().getFullYear();
+  if(isWali()){
+    $("sppNamaAtlet").value=currentUserSession.atletKey||"";
+    $("sppNamaAtlet").readOnly=true;
+    $("cardSppCoach").classList.add("hidden");
+    muatHistoriSppAtlet();
+  } else {
+    $("sppNamaAtlet").readOnly=false;
+    $("cardSppCoach").classList.remove("hidden");
+    muatDaftarKonfirmasiSpp();
+  }
+}
+function kirimKonfirmasiSpp(){
+  var nama=($("sppNamaAtlet").value||"").toUpperCase().trim();
+  var bulan=$("sppBulan").value;
+  var nominal=parseInt($("sppNominal").value,10)||0;
+  if(!nama||!bulan||nominal<=0){ showAlert("Perhatian","Nama atlet, bulan, dan nominal (> 0) wajib diisi."); return; }
+  var atlet=globalMasterAtletList.find(function(a){ return (a.panggilan||"").toUpperCase()===nama; });
+  var paket={namaPanggilan:nama, namaLengkap:atlet?atlet.lengkap:nama, bulanTahun:bulan, nominal:nominal, catatan:$("sppCatatan").value||"", fotoBukti:""};
+  var fileInput=$("sppFotoBukti");
+  function kirim(){
+    panggilServer("submitKonfirmasiSppWali",[getToken(), paket],{ pesan:"Mengirim konfirmasi SPP…", autoRetry:false, onSukses:function(res){
+      showLoading(false);
+      if(tanganiResError(res)) return;
+      toast(res.success||"Konfirmasi SPP terkirim, menunggu verifikasi pelatih.");
+      $("sppCatatan").value=""; if(fileInput) fileInput.value="";
+      muatHistoriSppAtlet();
+    }});
+  }
+  if(fileInput&&fileInput.files.length>0){
+    showLoading(true,"Mengompresi bukti foto…");
+    kompresGambarBase64(fileInput.files[0],800,800,0.7,function(b64){ paket.fotoBukti=b64||""; kirim(); });
+  } else kirim();
+}
+function muatDaftarKonfirmasiSpp(){
+  var bulan=$("sppCoachBulan").value||"";
+  panggilServer("getDaftarKonfirmasiSppCoach",[getToken(), bulan],{ pesan:"Memuat konfirmasi SPP…", autoRetry:true, onSukses:function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    var arr=Array.isArray(res)?res:[];
+    var box=$("sppKonfirmasiList");
+    if(!arr.length){ box.innerHTML='<p class="empty">Tidak ada konfirmasi SPP untuk bulan ini.</p>'; return; }
+    var h="";
+    arr.forEach(function(r){
+      var st=r.status||"-";
+      var pillCls=st==="LUNAS"?"ok":st==="DITOLAK"?"danger":"wait";
+      h+='<div class="act"><div style="flex:1;min-width:0"><b>'+esc(r.namaLengkap||r.namaPanggilan||"-")+'</b> <span class="small muted">('+esc(r.namaPanggilan||"")+' · '+esc(r.bulanTahun||"-")+')</span><br><span class="mono small">'+formatRupiah(r.nominal||0)+'</span> '+(r.fotoBukti?'<button class="btn sm" onclick="zoomFoto(\''+esc(r.fotoBukti).replace(/'/g,"")+'\',\'Bukti SPP '+esc(r.namaPanggilan||"")+'\')">Lihat Bukti</button>':"")+'</div><span class="pill '+pillCls+'">'+esc(st)+'</span>';
+      if(r.rowIndex){
+        h+='<button class="btn sm primary" onclick="verifikasiSpp('+r.rowIndex+',\'LUNAS\')">Lunas</button><button class="btn sm" onclick="verifikasiSpp('+r.rowIndex+',\'DITOLAK\')">Tolak</button><button class="btn sm danger" onclick="hapusSppBaris('+r.rowIndex+')">Hapus</button>';
+      }
+      h+='</div>';
+    });
+    box.innerHTML=h;
+  }});
+}
+function verifikasiSpp(rowIndex, statusBaru){
+  if(!isPelatih()) return;
+  panggilServer("prosesVerifikasiSppCoach",[getToken(), rowIndex, statusBaru],{ pesan:"Memverifikasi SPP…", autoRetry:false, onSukses:function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    toast(res.success||"Status SPP diperbarui.");
+    muatDaftarKonfirmasiSpp();
+  }});
+}
+function hapusSppBaris(rowIndex){
+  if(!isPelatih()) return;
+  showConfirm("Hapus Konfirmasi SPP?","Baris konfirmasi SPP ini akan dihapus permanen.","Ya, Hapus").then(function(ya){
+    if(!ya) return;
+    panggilServer("hapusSpp",[getToken(), rowIndex],{ pesan:"Menghapus SPP…", autoRetry:false, onSukses:function(res){
+      showLoading(false);
+      if(tanganiResError(res)) return;
+      toast(res.success||"Konfirmasi SPP dihapus.");
+      muatDaftarKonfirmasiSpp();
+    }});
+  });
+}
+function muatMatriksSpp(){
+  var tahun=$("sppMatriksTahun").value||String(new Date().getFullYear());
+  showLoading(true,"Memuat matriks SPP…");
+  panggilBackend("getRekapMatriksSppAdmin", [getToken(), tahun]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    var arr=Array.isArray(res)?res:[];
+    var box=$("sppMatriksContainer");
+    if(!arr.length){ box.innerHTML='<p class="empty">Belum ada data SPP tahun ini.</p>'; return; }
+    /* v13: baca kunci bulan penuh / objek `matriks` (perbaikan F.4.1) */
+    var h='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Atlet</th>';
+    BULAN_SINGKAT.forEach(function(b){ h+='<th>'+b+'</th>'; });
+    h+='<th>Lunas</th></tr></thead><tbody>';
+    arr.forEach(function(r){
+      var mat=r.matriks||r;
+      h+='<tr><td><b>'+esc(r.namaLengkap||r.namaPanggilan||"-")+'</b><br><span class="small muted">'+esc(r.namaPanggilan||"")+'</span></td>';
+      BULAN_NAMA.forEach(function(bn){
+        var st=mat[bn]||"-";
+        var cls=st==="LUNAS"?"ok":(st==="-"?"":"wait");
+        h+='<td><span class="pill '+cls+'">'+esc(st)+'</span></td>';
+      });
+      h+='<td class="mono"><b>'+(r.totalLunas||0)+'/12</b></td></tr>';
+    });
+    h+='</tbody></table></div>';
+    box.innerHTML=h;
+  }, gagalServer);
+}
+
+/* ---------- PENDAFTARAN LOMBA + REKAP A3 ---------- */
+function bukaModalPendaftaranLomba(namaPanggilanAtlet, eventTerpilih){
+  if(!isPelatih()){ showAlert("Khusus Pelatih","Pendaftaran lomba hanya bisa dilakukan pelatih. Wali dapat melihat rekap di menu Lomba."); return; }
+  bukaModal("pendaftaranLombaModal");
+  $("txtTitleFormPendaftaran").textContent="Formulir Pendaftaran Lomba";
+  $("pdfIsEditMode").value="0"; $("pdfOldKeyAtlet").value="";
+  $("pdfAtletInput").disabled=false; $("pdfBiayaPerNomor").disabled=false;
+  $("pdfNamaEventBaru").classList.add("hidden"); $("pdfNamaEventBaru").value="";
+  var container=$("containerInputEvent");
+  container.innerHTML='<select id="pdfSelectEvent" onchange="handleSelectEventChange(this)" class="input"><option value="">-- Memuat Daftar Event... --</option></select>';
+  panggilBackend("getDaftarEventLomba", [getToken()]).then(function(listEvent){
+    if(tanganiResError(listEvent)) return;
+    var sel=$("pdfSelectEvent"); if(!sel) return;
+    sel.innerHTML='<option value="">-- Pilih Kejuaraan / Event --</option>';
+    (listEvent||[]).forEach(function(ev){ var o=document.createElement("option"); o.value=ev; o.textContent=ev; sel.appendChild(o); });
+    var optNew=document.createElement("option"); optNew.value="__NEW_EVENT__"; optNew.textContent="➕ [ Tambah Event Baru... ]"; sel.appendChild(optNew);
+    if(eventTerpilih && (listEvent||[]).includes(eventTerpilih)){ sel.value=eventTerpilih; sel.disabled=true; }
+    else if(LAST_SAVED_EVENT_NAME && (listEvent||[]).includes(LAST_SAVED_EVENT_NAME)) sel.value=LAST_SAVED_EVENT_NAME;
+  }, gagalServer);
+  if(LAST_SAVED_BIAYA_PER_NOMOR!=="") $("pdfBiayaPerNomor").value=LAST_SAVED_BIAYA_PER_NOMOR;
+  listNomorLombaTerpilih=[]; renderChipsNomorTerpilih(); updateOpsiNomorLomba(); hitungTotalBiayaLomba();
+  if(namaPanggilanAtlet){
+    var atlet=globalMasterAtletList.find(function(a){ return a.panggilan.toUpperCase()===namaPanggilanAtlet.toUpperCase()||a.lengkap.toUpperCase()===namaPanggilanAtlet.toUpperCase(); });
+    if(atlet) pilihAtletPendaftaranSuggest(atlet.panggilan, atlet.lengkap, atlet.gender, atlet.noHp);
+  }
+}
+function handleSelectEventChange(sel){
+  var inp=$("pdfNamaEventBaru"); if(!inp) return;
+  if(sel.value==="__NEW_EVENT__"){ inp.classList.remove("hidden"); inp.focus(); }
+  else { inp.classList.add("hidden"); inp.value=""; }
+}
+function handlePendaftaranAtletSuggest(){
+  var val=$("pdfAtletInput").value.toLowerCase().trim();
+  var box=$("pdfSuggestBox");
+  if(val.length<2){ box.classList.add("hidden"); $("pdfAtletHidden").value=""; $("pdfPaPi").value="-"; $("pdfNoHpWali").value=""; return; }
+  var matches=globalMasterAtletList.filter(function(it){ return it.lengkap.toLowerCase().includes(val)||it.panggilan.toLowerCase().includes(val); });
+  if(matches.length){
+    var html="";
+    matches.forEach(function(it){
+      html+='<div onclick="pilihAtletPendaftaranSuggest(\''+esc(it.panggilan).replace(/'/g,"\\'")+'\',\''+esc(it.lengkap).replace(/'/g,"\\'")+'\',\''+esc(it.gender||"")+'\',\''+esc(it.noHp||"")+'\')" style="padding:8px;cursor:pointer;display:flex;gap:10px;align-items:center">'+avatarHtml(it.lengkap,"sm")+'<div><b style="font-size:13px">'+esc(it.lengkap)+'</b><br><span class="small muted">Panggilan: '+esc(it.panggilan)+'</span></div></div>';
+    });
+    box.innerHTML=html; box.classList.remove("hidden");
+  } else { box.innerHTML='<div class="empty">Nama atlet tidak ditemukan.</div>'; box.classList.remove("hidden"); }
+}
+function pilihAtletPendaftaranSuggest(panggilan, lengkap, gender, noHp){
+  $("pdfAtletHidden").value=panggilan;
+  $("pdfAtletInput").value=lengkap+" ("+panggilan+")";
+  $("pdfPaPi").value=(gender==="Laki-laki"||gender==="PA")?"PA":"PI";
+  $("pdfNoHpWali").value=noHp||"";
+  $("pdfSuggestBox").classList.add("hidden");
+}
+function updateOpsiNomorLomba(){
+  var kat=$("pdfKategoriEvent").value;
+  var jarakOpts, gayaOpts;
+  if(kat==="Fun"){ jarakOpts=["25m","50m","100m"]; gayaOpts=["FR","BR","BK","BU","Papan FR","Papan BR","Papan BK","Papan BU","Fin FR","Fin BK","Fin BU"]; }
+  else if(kat==="Krapsi"||kat==="Kras"){ jarakOpts=["50m","100m","200m","400m","800m","1500m"]; gayaOpts=["FR","BR","BK","BU","IM"]; }
+  else { jarakOpts=["50m","100m","200m","400m","800m"]; gayaOpts=["FR","BR","BK","BU","IM"]; }
+  $("pdfSelectJarak").innerHTML=jarakOpts.map(function(j){ return "<option>"+j+"</option>"; }).join("");
+  $("pdfSelectGaya").innerHTML=gayaOpts.map(function(g){ return "<option>"+g+"</option>"; }).join("");
+}
+function tambahNomorTerpilih(){
+  var nomor=$("pdfSelectJarak").value+" "+$("pdfSelectGaya").value;
+  if(!listNomorLombaTerpilih.includes(nomor)) listNomorLombaTerpilih.push(nomor);
+  renderChipsNomorTerpilih(); hitungTotalBiayaLomba();
+}
+function renderChipsNomorTerpilih(){
+  var box=$("containerNomorTerpilih");
+  if(!listNomorLombaTerpilih.length){ box.innerHTML='<p class="small muted" style="font-style:italic">Belum ada nomor dipilih.</p>'; return; }
+  box.innerHTML=listNomorLombaTerpilih.map(function(n,i){ return '<span class="pill info" style="margin:0 4px 4px 0">'+esc(n)+' <button style="border:0;background:none;color:inherit;cursor:pointer" onclick="hapusNomorTerpilih('+i+')">✕</button></span>'; }).join("");
+}
+function hapusNomorTerpilih(i){ listNomorLombaTerpilih.splice(i,1); renderChipsNomorTerpilih(); hitungTotalBiayaLomba(); }
+function hitungTotalBiayaLomba(){
+  var biaya=parseInt($("pdfBiayaPerNomor").value,10)||0;
+  $("pdfTotalBiayaDisplay").textContent=formatRupiah(listNomorLombaTerpilih.length*biaya);
+}
+function prosesSimpanPendaftaranLomba(){
+  var sel=$("pdfSelectEvent");
+  var namaEvent=sel?(sel.value==="__NEW_EVENT__"?$("pdfNamaEventBaru").value.trim():sel.value):"";
+  var namaAtlet=$("pdfAtletHidden").value;
+  if(!namaEvent){ showAlert("Perhatian","Pilih atau isi nama event dulu."); return; }
+  if(!namaAtlet){ showAlert("Perhatian","Pilih atlet dulu (ketik nama, lalu pilih dari saran)."); return; }
+  if(!listNomorLombaTerpilih.length){ showAlert("Perhatian","Tambahkan minimal 1 nomor lomba."); return; }
+  var atlet=globalMasterAtletList.find(function(a){ return a.panggilan.toUpperCase()===namaAtlet.toUpperCase(); });
+  var biaya=parseInt($("pdfBiayaPerNomor").value,10)||0;
+  var paket={
+    namaEvent:namaEvent, namaAtlet:namaAtlet,
+    oldNamaAtlet:$("pdfOldKeyAtlet").value||"",
+    isEditMode:$("pdfIsEditMode").value==="1",
+    namaLengkap:atlet?atlet.lengkap:namaAtlet,
+    tglLahir:atlet?formatKeIndo(atlet.tglLahir):"",
+    paPi:$("pdfPaPi").value||"PA",
+    nomorDiikuti:listNomorLombaTerpilih.slice(),
+    totalNomor:listNomorLombaTerpilih.length,
+    biayaPerNomor:biaya,
+    totalBiaya:listNomorLombaTerpilih.length*biaya,
+    statusBayar:$("pdfStatusBayar").value,
+    noHpWali:$("pdfNoHpWali").value||"",
+    kirimWa:$("chkKirimWaPendaftaran").checked,
+    tanggalInput:new Date().toLocaleDateString("id-ID")
+  };
+  showLoading(true,"Menyimpan pendaftaran lomba…");
+  panggilBackend("simpanPendaftaranLomba", [getToken(), paket]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    LAST_SAVED_EVENT_NAME=res.eventNameSaved||namaEvent;
+    LAST_SAVED_BIAYA_PER_NOMOR=String(res.biayaSaved!==undefined?res.biayaSaved:biaya);
+    tutupModal("pendaftaranLombaModal");
+    toast((res.success||"Pendaftaran berhasil disimpan.")+(res.waStatus?(" ("+res.waStatus+")"):""));
+    muatDataRekapA3SesuaiEvent();
+  }, gagalServer);
+}
+function kirimWaManualPendaftaran(){
+  var sel=$("pdfSelectEvent");
+  var namaEvent=sel?(sel.value==="__NEW_EVENT__"?$("pdfNamaEventBaru").value.trim():sel.value):"";
+  var namaAtlet=$("pdfAtletHidden").value;
+  var noHp=$("pdfNoHpWali").value||"";
+  if(!noHp||!listNomorLombaTerpilih.length){ showAlert("Perhatian","Isi nomor HP wali dan pilih minimal 1 nomor lomba dulu."); return; }
+  var atlet=globalMasterAtletList.find(function(a){ return a.panggilan.toUpperCase()===namaAtlet.toUpperCase(); });
+  var biaya=parseInt($("pdfBiayaPerNomor").value,10)||0;
+  var payload={noHp:noHp, namaAtlet:(atlet?atlet.lengkap:namaAtlet)+" ("+namaAtlet+")", namaEvent:namaEvent, nomorDiikuti:listNomorLombaTerpilih.join(", "), totalTagihan:formatRupiah(listNomorLombaTerpilih.length*biaya), statusBayar:$("pdfStatusBayar").value};
+  showLoading(true,"Mengirim WA tagihan…");
+  panggilBackend("kirimNotifikasiWaTagihanFonnte", [getToken(), payload]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    toast(res.success||"Pesan WA terkirim.");
+  }, gagalServer);
+}
+function bukaModalEditPendaftaranAtlet(namaAtletKey){
+  var record=globalDataA3List.find(function(item){
+    return item.namaAtlet.toUpperCase().includes(namaAtletKey.toUpperCase())||namaAtletKey.toUpperCase().includes(item.namaAtlet.toUpperCase());
+  });
+  if(!record){ showAlert("Error","Data pendaftaran atlet tidak ditemukan."); return; }
+  bukaModalPendaftaranLomba(null, record.namaEvent);
+  $("txtTitleFormPendaftaran").textContent="Edit Nomor Lomba: "+record.namaAtlet;
+  $("pdfIsEditMode").value="1"; $("pdfOldKeyAtlet").value=record.namaAtlet;
+  $("pdfBiayaPerNomor").value=record.biayaPerNomor||50000;
+  $("pdfStatusBayar").value=record.statusBayar||"Belum Lunas";
+  $("pdfNoHpWali").value=record.noHpWali||"";
+  $("pdfAtletInput").disabled=true;
+  $("pdfBiayaPerNomor").disabled=true;
+  var atletMatch=globalMasterAtletList.find(function(a){ return a.panggilan.toUpperCase()===record.namaAtlet.toUpperCase()||a.lengkap.toUpperCase()===record.namaAtlet.toUpperCase(); });
+  var namaLengkapDisp=atletMatch?(atletMatch.lengkap+" ("+atletMatch.panggilan+")"):record.namaAtlet;
+  $("pdfAtletHidden").value=atletMatch?atletMatch.panggilan:record.namaAtlet;
+  $("pdfAtletInput").value=namaLengkapDisp;
+  $("pdfPaPi").value=record.paPi||"PA";
+  var rawNomors=Array.isArray(record.nomorDiikuti)?record.nomorDiikuti:(record.nomorDiikuti?String(record.nomorDiikuti).split(","):[]);
+  listNomorLombaTerpilih=[];
+  rawNomors.forEach(function(n){ var c=n.trim(); if(c&&!listNomorLombaTerpilih.includes(c)) listNomorLombaTerpilih.push(c); });
+  updateOpsiNomorLomba(); renderChipsNomorTerpilih(); hitungTotalBiayaLomba();
+}
+function bukaModalRekapA3Data(){
+  var sel=$("selectFilterEventA3");
+  sel.innerHTML='<option value="all">-- Memuat Event... --</option>';
+  panggilBackend("getDaftarEventLomba", [getToken()]).then(function(listEvent){
+    if(tanganiResError(listEvent)) return;
+    sel.innerHTML='<option value="all">-- Semua Event / Kejuaraan --</option>';
+    (listEvent||[]).forEach(function(ev){ var o=document.createElement("option"); o.value=ev; o.textContent=ev; sel.appendChild(o); });
+    muatDataRekapA3SesuaiEvent();
+  }, gagalServer);
+}
+function muatDataRekapA3SesuaiEvent(){
+  var selectedEv=$("selectFilterEventA3").value||"all";
+  panggilServer("getRekapPendaftaranLomba",[getToken(), selectedEv],{ pesan:"Memuat Data Rekap A3…", autoRetry:true, onSukses:function(dataList){
+    showLoading(false);
+    if(tanganiResError(dataList)) return;
+    globalDataA3List=dataList||[];
+    if(selectedEv==="all") renderRingkasanSemuaEvent(globalDataA3List);
+    else { $("txtCountA3").innerText=globalDataA3List.length; renderTabelMatriksA3(globalDataA3List); }
+  }});
+}
+function hapusPendaftaranLombaByIndex(idx){
+  var item=globalDataA3List[idx]; if(!item) return;
+  if(!isPelatih()) return;
+  showConfirm("Hapus Pendaftaran?","Pendaftaran "+(item.namaAtlet||"-")+" pada event \""+(item.namaEvent||"-")+"\" akan dihapus permanen.","Ya, Hapus").then(function(ya){
+    if(!ya) return;
+    panggilServer("hapusPendaftaranAtlet",[getToken(), item.namaAtlet, item.namaEvent],{ pesan:"Menghapus pendaftaran lomba…", autoRetry:false, onSukses:function(res){
+      showLoading(false);
+      if(tanganiResError(res)) return;
+      toast(res.success||"Pendaftaran berhasil dihapus.");
+      muatDataRekapA3SesuaiEvent();
+    }});
+  });
+}
+function renderRingkasanSemuaEvent(dataList){
+  var container=$("containerTabelA3");
+  if(!dataList||!dataList.length){ container.innerHTML='<p class="empty">Belum ada data pendaftaran lomba yang dicatat.</p>'; $("txtCountA3").innerText="0"; return; }
+  var mapEvent={}, totalUnik=new Set();
+  dataList.forEach(function(item){
+    var namaEv=item.namaEvent||"Tanpa Nama Event";
+    if(!mapEvent[namaEv]) mapEvent[namaEv]={atletMap:new Set(), totalNomor:0, totalBiaya:0, biayaPerNomor:item.biayaPerNomor||50000};
+    mapEvent[namaEv].atletMap.add(item.namaAtlet); totalUnik.add(item.namaAtlet);
+    mapEvent[namaEv].totalNomor+=parseInt(item.totalNomor||0);
+    mapEvent[namaEv].totalBiaya+=parseInt(item.totalBiaya||0);
+  });
+  $("txtCountA3").innerText=totalUnik.size;
+  var h='<div class="grid2">';
+  Object.keys(mapEvent).forEach(function(evName){
+    var obj=mapEvent[evName];
+    var btnEdit=isPelatih()?'<button class="btn sm" onclick="event.stopPropagation();bukaModalEditEventA3(\''+esc(evName).replace(/'/g,"\\'")+'\','+obj.biayaPerNomor+')">✏️ Edit</button>':"";
+    h+='<div class="card" style="cursor:pointer;margin-bottom:0" onclick="pilihEventDariRingkasan(\''+esc(evName).replace(/'/g,"\\'")+'\')"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><b>'+esc(evName)+'</b>'+btnEdit+'</div><p class="small muted" style="margin-top:6px">'+obj.atletMap.size+' Atlet Terdaftar · '+obj.totalNomor+' Nomor Lomba</p><p class="mono" style="margin-top:6px;font-weight:800;color:var(--green)">'+formatRupiah(obj.totalBiaya)+'</p><span class="small" style="color:var(--accent);font-weight:700">Buka Matriks →</span></div>';
+  });
+  h+='</div>';
+  container.innerHTML=h;
+}
+function pilihEventDariRingkasan(namaEvent){ $("selectFilterEventA3").value=namaEvent; muatDataRekapA3SesuaiEvent(); }
+/* Urai "50m Papan FR" / "100m Fin BK" / "50m FR" -> {jarak, gaya, jenis, sub} */
+function parseNomorMatriks(nomorStr){
+  var n=String(nomorStr||"").toUpperCase().trim();
+  var m=n.match(/(\d+)\s*M\s*(.*)/);
+  if(!m) return null;
+  var jarak=m[1]+"M", rest=(m[2]||"").trim();
+  var gaya="FR";
+  if(/BR|DADA/.test(rest)) gaya="BR";
+  else if(/BK|PUNGGUNG/.test(rest)) gaya="BK";
+  else if(/BU|KUPU/.test(rest)) gaya="BU";
+  else if(/IM|GANTI/.test(rest)) gaya="IM";
+  var jenis="BIASA", sub=jarak;
+  if(rest.indexOf("PAPAN")===0){ jenis="PAPAN"; sub="PAPAN"; }
+  else if(rest.indexOf("FIN")===0){ jenis="FIN"; sub="FIN "+jarak; }
+  return {jarak:jarak, gaya:gaya, jenis:jenis, sub:sub};
+}
+function gayaGroupDariKode(gaya){
+  return {FR:"BEBAS",BU:"KUPU",BK:"PUNGGUNG",BR:"DADA",IM:"GANTI"}[gaya]||"BEBAS";
+}
+function strukturkanHeaderMatriksA3(dataList){
+  var gayaUrutan=["BEBAS","KUPU","PUNGGUNG","DADA","GANTI"];
+  var subUrutan=["PAPAN","FIN 25M","FIN 50M","FIN 100M","25M","50M","100M","200M","400M","800M","1500M"];
+  var perGaya={};
+  dataList.forEach(function(item){
+    var noms=Array.isArray(item.nomorDiikuti)?item.nomorDiikuti:String(item.nomorDiikuti||"").split(",");
+    noms.forEach(function(n){
+      var p=parseNomorMatriks(n); if(!p) return;
+      var g=gayaGroupDariKode(p.gaya);
+      if(!perGaya[g]) perGaya[g]=new Set();
+      perGaya[g].add(p.sub);
+    });
+  });
+  var header=[];
+  gayaUrutan.forEach(function(g){
+    if(!perGaya[g]||!perGaya[g].size) return;
+    var subs=subUrutan.filter(function(s){ return perGaya[g].has(s); });
+    if(subs.length) header.push({gaya:g, subs:subs});
+  });
+  return header;
+}
+function nomorCocokSelMatriks(nomorStr, gayaGroup, sub){
+  var p=parseNomorMatriks(nomorStr); if(!p) return false;
+  return gayaGroupDariKode(p.gaya)===gayaGroup && p.sub===sub;
+}
+function renderTabelMatriksA3(dataList){
+  var container=$("containerTabelA3");
+  if(!dataList||!dataList.length){ container.innerHTML='<p class="empty">Belum ada pendaftaran untuk event ini.</p>'; return; }
+  var header=strukturkanHeaderMatriksA3(dataList);
+  var h='<div class="tabs"><button class="'+(activeA3ViewMode==="card"?"active":"")+'" onclick="setA3ViewMode(\'card\')">Kartu</button><button class="'+(activeA3ViewMode==="table"?"active":"")+'" onclick="setA3ViewMode(\'table\')">Matriks Tabel</button></div>';
+  if(activeA3ViewMode==="table"){
+    h+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Atlet</th>';
+    header.forEach(function(gh){ gh.subs.forEach(function(s){ h+='<th style="text-align:center">'+gh.gaya+'<br><span class="small">'+s+'</span></th>'; }); });
+    h+='<th>Total</th><th>Biaya</th><th>Status</th><th></th></tr></thead><tbody>';
+    dataList.forEach(function(item,idx){
+      var noms=Array.isArray(item.nomorDiikuti)?item.nomorDiikuti:String(item.nomorDiikuti||"").split(",");
+      h+='<tr><td><b>'+esc(item.namaAtlet||"-")+'</b><br><span class="small muted">'+esc(item.paPi||"")+' · '+esc(item.tglLahir||"-")+'</span></td>';
+      header.forEach(function(gh){ gh.subs.forEach(function(s){
+        var ada=noms.some(function(n){ return nomorCocokSelMatriks(n, gh.gaya, s); });
+        h+='<td style="text-align:center">'+(ada?'<span style="color:var(--green);font-weight:800">✓</span>':"")+'</td>';
+      }); });
+      h+='<td>'+(item.totalNomor||0)+'</td><td class="mono">'+formatRupiah(item.totalBiaya||0)+'</td><td><span class="pill '+(item.statusBayar==="Lunas"?"ok":"wait")+'">'+esc(item.statusBayar||"-")+'</span></td>';
+      h+='<td style="white-space:nowrap">'+(isPelatih()?'<button class="btn sm" onclick="bukaModalEditPendaftaranAtlet(\''+esc(item.namaAtlet).replace(/'/g,"\\'")+'\')">Edit</button> <button class="btn sm danger" onclick="hapusPendaftaranLombaByIndex('+idx+')">Hapus</button>':"")+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  } else {
+    h+='<div class="grid2">';
+    dataList.forEach(function(item,idx){
+      var noms=Array.isArray(item.nomorDiikuti)?item.nomorDiikuti:String(item.nomorDiikuti||"").split(",");
+      h+='<div class="card" style="margin-bottom:0"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+esc(item.namaAtlet||"-")+'</b><span class="pill '+(item.statusBayar==="Lunas"?"ok":"wait")+'">'+esc(item.statusBayar||"-")+'</span></div>';
+      h+='<p class="small muted">'+esc(item.paPi||"")+' · Lahir '+esc(item.tglLahir||"-")+' · '+esc(item.namaEvent||"")+'</p>';
+      h+='<div style="margin:8px 0">'+noms.map(function(n){ return '<span class="pill info" style="margin:0 4px 4px 0">'+esc(n.trim())+'</span>'; }).join("")+'</div>';
+      h+='<p class="small"><b>'+(item.totalNomor||0)+' nomor</b> · <span class="mono">'+formatRupiah(item.totalBiaya||0)+'</span> · HP: '+esc(item.noHpWali||"-")+'</p>';
+      if(isPelatih()) h+='<div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" onclick="bukaModalEditPendaftaranAtlet(\''+esc(item.namaAtlet).replace(/'/g,"\\'")+'\')">Edit Nomor</button><button class="btn sm danger" onclick="hapusPendaftaranLombaByIndex('+idx+')">Hapus</button></div>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+  container.innerHTML=h;
+}
+function setA3ViewMode(mode){ activeA3ViewMode=mode; muatDataRekapA3SesuaiEvent(); }
+function downloadExcelA3(){
+  if(!isPelatih()) return;
+  if(typeof XLSX==="undefined"){ showAlert("Gagal","Pustaka Excel (SheetJS) belum termuat. Periksa koneksi internet."); return; }
+  var ev=$("selectFilterEventA3").value||"all";
+  var header=strukturkanHeaderMatriksA3(globalDataA3List);
+  var headRow=["NO","NAMA ATLET","PA/PI","TANGGAL LAHIR"];
+  header.forEach(function(gh){ gh.subs.forEach(function(s){ headRow.push(gh.gaya+" "+s); }); });
+  headRow.push("TOTAL NOMOR","TOTAL BIAYA (RP)","STATUS BAYAR","NO HP WALI");
+  var aoa=[headRow];
+  globalDataA3List.forEach(function(item,i){
+    var noms=Array.isArray(item.nomorDiikuti)?item.nomorDiikuti:String(item.nomorDiikuti||"").split(",");
+    var row=[i+1, item.namaAtlet||"", item.paPi||"", item.tglLahir||""];
+    header.forEach(function(gh){ gh.subs.forEach(function(s){
+      var ada=noms.some(function(n){ return nomorCocokSelMatriks(n, gh.gaya, s); });
+      row.push(ada?"V":"");
+    }); });
+    row.push(item.totalNomor||0, item.totalBiaya||0, item.statusBayar||"", item.noHpWali||"");
+    aoa.push(row);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Rekap A3");
+  var namaFile="Rekap_A3_Pendaftaran_"+(ev==="all"?"Semua_Event":ev.replace(/[^\w\-]+/g,"_"))+".xlsx";
+  XLSX.writeFile(wb, namaFile);
+  toast("Excel A3 diunduh: "+namaFile);
+}
+function bukaModalEditEventA3(namaEventLama, biayaCurrent){
+  if(!isPelatih()) return;
+  $("editEventOldName").value=namaEventLama;
+  $("editEventNewName").value=namaEventLama;
+  $("editEventBiayaGlobal").value=biayaCurrent||50000;
+  bukaModal("modalEditEventA3");
+}
+function prosesSimpanEditEventA3(){
+  if(!isPelatih()) return;
+  var oldName=$("editEventOldName").value;
+  var newName=$("editEventNewName").value.trim();
+  var newBiaya=parseInt($("editEventBiayaGlobal").value,10)||0;
+  if(!newName){ showAlert("Perhatian","Nama Event Baru tidak boleh kosong!"); return; }
+  showLoading(true,"Memperbarui Informasi Event A3…");
+  panggilBackend("editEventA3Header", [getToken(), oldName, newName, newBiaya]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    toast(res.success||"Informasi event berhasil diperbarui.");
+    tutupModal("modalEditEventA3");
+    bukaModalRekapA3Data();
+  }, gagalServer);
+}
+function prosesHapusEventA3(){
+  if(!isPelatih()) return;
+  var eventName=$("editEventOldName").value;
+  showConfirm("Hapus Event?","Event \""+eventName+"\" beserta SEMUA pendaftarannya akan dihapus permanen.","Ya, Hapus Event").then(function(ya){
+    if(!ya) return;
+    showLoading(true,"Menghapus event…");
+    panggilBackend("hapusEventA3", [getToken(), eventName]).then(function(res){
+      showLoading(false);
+      if(tanganiResError(res)) return;
+      toast(res.success||"Event berhasil dihapus.");
+      tutupModal("modalEditEventA3");
+      bukaModalRekapA3Data();
+    }, gagalServer);
+  });
+}
+
+/* ---------- BUKU ACARA ---------- */
+function bukaModalBukuAcara(){
+  var targetEv=$("txtNamaEventTerdekat").textContent||"Kejuaraan ACS";
+  $("baNamaEvent").value=(targetEv&&targetEv!=="—")?targetEv:"Kejuaraan ACS";
+  $("baHasilContainer").classList.add("hidden");
+  $("baPdfInput").value="";
+  parsedBukuAcaraDataList=[];
+  bukaModal("bukuAcaraModal");
+}
+async function prosesAnalisisBukuAcaraPDF(){
+  var fileInput=$("baPdfInput");
+  var eventName=$("baNamaEvent").value.trim();
+  if(!eventName){ showAlert("Perhatian","Nama Event/Kejuaraan wajib diisi!"); return; }
+  if(!fileInput.files||!fileInput.files.length){ showAlert("Perhatian","Pilih file PDF Buku Acara terlebih dahulu!"); return; }
+  if(typeof pdfjsLib==="undefined"){ showAlert("Gagal","Pustaka PDF (pdf.js) belum termuat. Periksa koneksi internet."); return; }
+  var file=fileInput.files[0];
+  var btn=$("btnEkstrakBukuAcara");
+  var progressBox=$("baProgressContainer"), progressBar=$("baProgressBar"), progressPercent=$("baProgressPercent");
+  btn.disabled=true; btn.classList.add("hidden"); progressBox.classList.remove("hidden");
+  parsedBukuAcaraDataList=[];
+  try{
+    var arrayBuffer=await file.arrayBuffer();
+    var pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+    var totalPages=pdf.numPages;
+    var currentNoAcara="-", currentNamaAcara="Nomor Lomba", currentHeat="-";
+    var acsClubRegex=/(ALL\s*CAN\s*SWIM|ALL\s*CAN\s*SWIM\s*CLUB|ACS\s*BANJARNEGARA|\bACS\b)/i;
+    for(var pageNum=1; pageNum<=totalPages; pageNum++){
+      var percent=Math.round((pageNum/totalPages)*100);
+      progressBar.style.width=percent+"%"; progressPercent.innerText=percent+"%";
+      var page=await pdf.getPage(pageNum);
+      var textContent=await page.getTextContent();
+      var lines=[], lastY=null, curLine="";
+      textContent.items.forEach(function(item){
+        if(lastY!==null && Math.abs(item.transform[5]-lastY)>4){ if(curLine.trim().length>0) lines.push(curLine.trim()); curLine=""; }
+        curLine+=" "+item.str; lastY=item.transform[5];
+      });
+      if(curLine.trim().length>0) lines.push(curLine.trim());
+      lines.forEach(function(lineText){
+        var cleanLine=lineText.replace(/\s+/g," ").trim();
+        var evMatch=cleanLine.match(/(?:Acara|Event|Lomba|#)\s*(\d+)/i);
+        if(evMatch){ currentNoAcara=evMatch[1].trim(); currentHeat="-"; }
+        var namaMatch=cleanLine.match(/\b\d+\s*M\s+(GAYA|BEBAS|DADA|PUNGGUNG|KUPU|GANTI)\b/i);
+        if(namaMatch){
+          var namaClean=cleanLine.replace(/AKHIR|FINAL|PRELIM/gi,"").replace(/\b\d{1,2}\s+(Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4}\b/gi,"").replace(/(?:Acara|Event|Lomba|#)\s*\d+/gi,"").trim();
+          namaClean=namaClean.replace(/,\s*$/,"").trim();
+          if(namaClean.length>5) currentNamaAcara=namaClean;
+        }
+        var seriMatch=cleanLine.match(/\bSeri\s+0*(\d+)\b/i);
+        if(seriMatch){ currentHeat=seriMatch[1]; cleanLine=cleanLine.replace(seriMatch[0],"").trim(); }
+        if(acsClubRegex.test(cleanLine)){
+          var laneMatch=cleanLine.match(/(?:^|\s)(\d{1,2})\b/);
+          var detectedLane=laneMatch?laneMatch[1]:"-";
+          var namaAtletAuto="";
+          var cleanLineUpper=cleanLine.toUpperCase();
+          globalMasterAtletList.forEach(function(a){
+            var p=(a.panggilan||"").toUpperCase().trim(), l=(a.lengkap||"").toUpperCase().trim();
+            if(cleanLineUpper.includes(l)||(p.length>=3&&cleanLineUpper.includes(" "+p+" "))) namaAtletAuto=a.lengkap;
+          });
+          if(!namaAtletAuto){
+            var beforeClubText=cleanLine.split(acsClubRegex)[0].trim();
+            var parts=beforeClubText.split(/\s+/);
+            var filteredParts=parts.filter(function(pt){ return !/^(Heat|Seri|Lane|Lintasan|Ln|H|L|NT|\d+[\.,]\d+|\d+|ID|Lomba|GROUP[A-Z]?|KU|NO|LIMIT|AKHIR)$/i.test(pt); });
+            namaAtletAuto=filteredParts.join(" ").replace(/[^a-zA-Z\s\-']/g,"").trim();
+            if(!namaAtletAuto) namaAtletAuto="ATLET ACS";
+          }
+          parsedBukuAcaraDataList.push({noAcara:currentNoAcara, namaAcara:currentNamaAcara, heat:currentHeat, lane:detectedLane, namaAtlet:namaAtletAuto.toUpperCase(), klub:"ALL CAN SWIM CLUB", entryTime:"-"});
+        }
+      });
+    }
+    renderTabelHasilBukuAcara(parsedBukuAcaraDataList);
+  }catch(err){ showAlert("Gagal Membaca PDF", err.message||String(err)); }
+  finally{ btn.disabled=false; btn.classList.remove("hidden"); progressBox.classList.add("hidden"); }
+}
+function renderTabelHasilBukuAcara(dataList){
+  var tbody=$("baTabelBody"), container=$("baHasilContainer");
+  $("baTotalCount").innerText=dataList.length;
+  tbody.innerHTML="";
+  if(!dataList.length){ tbody.innerHTML="<tr><td colspan='7' class='empty'>Tidak ditemukan atlet klub ALL CAN SWIM CLUB dalam PDF ini. Pastikan file PDF memuat teks 'ALL CAN SWIM' atau 'ACS'.</td></tr>"; }
+  else{
+    dataList.forEach(function(item){
+      tbody.innerHTML+="<tr><td style='text-align:center;font-weight:700;color:var(--amber)'>"+esc(item.noAcara)+"</td><td style='font-weight:600'>"+esc(item.namaAcara)+"</td><td style='text-align:center'><span class='pill wait'>"+(item.heat!=="-"?"Seri "+esc(item.heat):"-")+"</span></td><td style='text-align:center'><span class='pill info'>"+(item.lane!=="-"?"Ln "+esc(item.lane):"-")+"</span></td><td style='font-weight:700'>"+esc(item.namaAtlet)+"</td><td class='muted small'>"+esc(item.klub)+"</td><td style='text-align:center;color:var(--green);font-weight:700'>-</td></tr>";
+    });
+  }
+  container.classList.remove("hidden");
+}
+function filterTabelBukuAcara(){
+  var q=$("baSearchAtlet").value.toLowerCase();
+  var filtered=parsedBukuAcaraDataList.filter(function(d){ return d.namaAtlet.toLowerCase().includes(q)||d.namaAcara.toLowerCase().includes(q); });
+  renderTabelHasilBukuAcara(filtered);
+}
+function simpanJadwalBukuAcaraKeSheet(){
+  var eventName=$("baNamaEvent").value.trim();
+  if(!parsedBukuAcaraDataList.length){ showAlert("Perhatian","Tidak ada data jadwal yang diekstrak."); return; }
+  showLoading(true,"Menyimpan "+parsedBukuAcaraDataList.length+" Jadwal ke Google Sheet…");
+  panggilBackend("simpanAnalisisBukuAcara", [getToken(), eventName, parsedBukuAcaraDataList]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    showAlert("Berhasil Disimpan!","Berhasil menyimpan "+res.count+" entri jadwal tanding ke sheet BUKU_ACARA_JADWAL!").then(function(){ tutupModal("bukuAcaraModal"); });
+  }, gagalServer);
+}
+function bukaViewerBukuAcara(){
+  bukaModal("viewerBukuAcaraModal");
+  var sel=$("selectEventViewerBA");
+  sel.innerHTML='<option value="all">-- Memuat Event... --</option>';
+  panggilBackend("getDaftarEventBukuAcara", [getToken()]).then(function(listEvent){
+    if(tanganiResError(listEvent)) return;
+    sel.innerHTML='<option value="all">-- Semua Event --</option>';
+    (listEvent||[]).forEach(function(ev){ var o=document.createElement("option"); o.value=ev; o.textContent=ev; sel.appendChild(o); });
+    var saved=localStorage.getItem("ACS_EVENT_TERDEKAT");
+    if(saved && (listEvent||[]).includes(saved)) sel.value=saved;
+    if(isWali()) $("searchViewerBA").value=currentUserSession.atletKey||"";
+    muatJadwalBukuAcara();
+  }, gagalServer);
+}
+function muatJadwalBukuAcara(){
+  var ev=$("selectEventViewerBA").value||"all";
+  showLoading(true,"Memuat jadwal buku acara…");
+  panggilBackend("getJadwalBukuAcara", [getToken(), ev, ""]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    globalDataViewerBA=Array.isArray(res)?res:[];
+    renderTabelViewerBukuAcara();
+  }, gagalServer);
+}
+function renderTabelViewerBukuAcara(){
+  var q=($("searchViewerBA").value||"").toLowerCase();
+  var filtered=globalDataViewerBA.filter(function(d){
+    return !q||(d.namaAtlet||"").toLowerCase().includes(q)||(d.namaAcara||"").toLowerCase().includes(q)||String(d.noAcara||"").includes(q);
+  });
+  $("txtCountViewerBA").innerText=filtered.length;
+  var tb=$("viewerBATabelBody");
+  if(!filtered.length){ tb.innerHTML="<tr><td colspan='7' class='empty'>Tidak ada jadwal untuk filter ini.</td></tr>"; return; }
+  var h="";
+  filtered.forEach(function(item){
+    h+="<tr><td style='text-align:center;font-weight:700;color:var(--amber)'>"+esc(item.noAcara||"-")+"</td><td style='font-weight:600'>"+esc(item.namaAcara||"-")+"</td><td style='text-align:center'><span class='pill wait'>"+(item.heat&&item.heat!=="-"?"Seri "+esc(item.heat):"-")+"</span></td><td style='text-align:center'><span class='pill info'>"+(item.lane&&item.lane!=="-"?"Ln "+esc(item.lane):"-")+"</span></td><td style='font-weight:700'>"+esc(item.namaAtlet||"-")+"</td><td class='muted small'>"+esc(item.klub||"-")+"</td><td style='text-align:center;color:var(--green);font-weight:700'>"+esc(item.entryTime||"-")+"</td></tr>";
+  });
+  tb.innerHTML=h;
+}
+function prosesHapusBukuAcara(){
+  if(!isPelatih()) return;
+  var ev=$("selectEventViewerBA").value||"all";
+  var teks=(ev==="all")?"SEMUA jadwal dari SEMUA event akan dihapus permanen.":"Semua jadwal event \""+ev+"\" akan dihapus permanen.";
+  showConfirm("Hapus Buku Acara?",teks,"Ya, Hapus").then(function(ya){
+    if(!ya) return;
+    showLoading(true,"Menghapus buku acara…");
+    panggilBackend("hapusBukuAcara", [getToken(), ev]).then(function(res){
+      showLoading(false);
+      if(tanganiResError(res)) return;
+      toast(res.success||"Buku Acara berhasil dihapus!");
+      muatJadwalBukuAcara();
+    }, gagalServer);
+  });
+}
+
+/* ---------- INPUT WAKTU (view) ---------- */
+function siapkanViewInput(){
+  if(!$("wktTanggal").value) $("wktTanggal").value=hariIniISO();
+  if(currentLoadedProfil && !$("wktNamaHidden").value){
+    $("wktNamaHidden").value=currentLoadedProfil.namaPanggilan;
+    $("wktNamaInput").value=(currentLoadedProfil.namaLengkap||"")+" ("+currentLoadedProfil.namaPanggilan+")";
+  }
+}
+function bukaPanelWaktu(){
+  navKe("input");
+  resetFormWaktu();
+  if(currentLoadedProfil){
+    $("wktNamaHidden").value=currentLoadedProfil.namaPanggilan;
+    $("wktNamaInput").value=(currentLoadedProfil.namaLengkap||"")+" ("+currentLoadedProfil.namaPanggilan+")";
+  }
+  window.scrollTo({top:0});
+}
+function resetFormWaktu(){
+  $("wktRowIndex").value=""; $("wktNamaHidden").value=""; $("wktNamaInput").value="";
+  $("inputJarak").value="50m"; $("inputGaya").value="FR";
+  $("wktTanggal").value=hariIniISO(); $("wktWaktu").value=""; $("wktStatus").value="Latihan";
+  $("wktModalTitle").textContent="Catat Waktu Latihan";
+}
+function handleWaktuAtletSuggest(){
+  var val=$("wktNamaInput").value.toLowerCase().trim();
+  var box=$("wktSuggestBox");
+  if(val.length<2){ box.classList.add("hidden"); $("wktNamaHidden").value=""; return; }
+  var matches=globalMasterAtletList.filter(function(it){ return it.lengkap.toLowerCase().includes(val)||it.panggilan.toLowerCase().includes(val); });
+  if(matches.length){
+    var html="";
+    matches.forEach(function(it){
+      html+='<div onclick="pilihAtletWaktuSuggest(\''+esc(it.panggilan).replace(/'/g,"\\'")+'\',\''+esc(it.lengkap).replace(/'/g,"\\'")+'\')" style="padding:8px;cursor:pointer;display:flex;gap:10px;align-items:center">'+avatarHtml(it.lengkap,"sm")+'<div><b style="font-size:13px">'+esc(it.lengkap)+'</b><br><span class="small muted">Panggilan: '+esc(it.panggilan)+'</span></div></div>';
+    });
+    box.innerHTML=html; box.classList.remove("hidden");
+  } else { box.innerHTML='<div class="empty">Nama atlet tidak ditemukan.</div>'; box.classList.remove("hidden"); }
+}
+function pilihAtletWaktuSuggest(panggilan, lengkap){
+  $("wktNamaHidden").value=panggilan;
+  $("wktNamaInput").value=lengkap+" ("+panggilan+")";
+  $("wktSuggestBox").classList.add("hidden");
+}
+function prosesSimpanWaktu(){
+  var namaAtlet=$("wktNamaHidden").value;
+  var jarak=$("inputJarak").value, gaya=$("inputGaya").value;
+  var tanggal=$("wktTanggal").value, waktu=$("wktWaktu").value.trim();
+  var status=$("wktStatus").value;
+  var rowIndex=$("wktRowIndex").value?parseInt($("wktRowIndex").value,10):null;
+  if(!namaAtlet){ showAlert("Perhatian","Pilih atlet dulu (ketik nama, lalu pilih dari saran)."); return; }
+  if(!tanggal||!waktu){ showAlert("Perhatian","Tanggal dan waktu wajib diisi."); return; }
+  var atlet=globalMasterAtletList.find(function(a){ return a.panggilan.toUpperCase()===namaAtlet.toUpperCase(); });
+  var paket={rowIndex:rowIndex, namaAtlet:namaAtlet, nomorLomba:jarak+" "+gaya, tanggal:formatKeIndo(tanggal), waktu:waktu, status:status, kirimWa:$("chkKirimWa").checked, noHpWali:atlet?atlet.noHp||"":""};
+  showLoading(true,"Menyimpan catatan waktu…");
+  panggilBackend("simpanWaktuLatihan", [getToken(), paket]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    toast((res.success||"Berhasil menyimpan catatan waktu!")+(res.waStatus?(" ("+res.waStatus+")"):""));
+    resetFormWaktu();
+    if(currentLoadedProfil && currentLoadedProfil.namaPanggilan===namaAtlet) openAthleteProfile(namaAtlet);
+    else muatAwalSistem();
+  }, gagalServer);
+}
+
+/* ---------- pacing ---------- */
+function bukaModalPacing(){ navKe("input"); setTimeout(function(){ var el=$("pacingPb"); if(el) el.focus(); },100); }
+function hitungPacing(){
+  var pb=parseFloat($("pacingPb").value);
+  var jarak=parseInt($("pacingJarak").value,10);
+  if(!pb||pb<=0){ showAlert("Perhatian","Isi PB 50m (detik) yang valid, lebih dari 0."); return; }
+  showLoading(true,"Menghitung pacing target…");
+  panggilBackend("hitungPacingTarget", [getToken(), pb, jarak]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    var total=res.totalWaktuStr||res.total||res.waktuTotal||res.hasil||"";
+    var pacing=res.pacing50Str||res.pacing50||res.pacingPer50m||res.pacing||"";
+    if(typeof total==="number") total=formatDetikKeMenit(total);
+    if(typeof pacing==="number") pacing=formatDetikKeMenit(pacing);
+    $("pacingHasil").innerHTML='<div class="grid2"><div class="card" style="margin:0;text-align:center"><div class="small muted">Estimasi Total '+jarak+'m</div><div class="timer-face" style="font-size:26px;padding:6px 0">'+esc(total)+'</div></div><div class="card" style="margin:0;text-align:center"><div class="small muted">Pacing per 50m</div><div class="timer-face" style="font-size:26px;padding:6px 0">'+esc(pacing)+'</div></div></div>';
+  }, gagalServer);
+}
+
+/* ---------- IMPORT MASAL ---------- */
+function bukaModalImportMasal(){
+  if(!isPelatih()){ showAlert("Khusus Pelatih","Import masal hanya bisa dilakukan pelatih."); return; }
+  var saved=localStorage.getItem("ACS_EVENT_TERDEKAT");
+  $("impNamaEvent").value=saved||"";
+  $("impTanggal").value=hariIniISO();
+  $("txtImportArea").value="";
+  $("fileImportHasil").value="";
+  parsedImportDataList=[];
+  $("previewImportContainer").classList.add("hidden");
+  bukaModal("importMasalModal");
+}
+function prosesFileImportHasil(inputEl){
+  if(!inputEl.files||!inputEl.files.length) return;
+  var file=inputEl.files[0];
+  var fileName=file.name.toLowerCase();
+  if(fileName.endsWith(".xls")||fileName.endsWith(".xlsx")) bacaFileExcelBestTime(file);
+  else bacaFileImport(inputEl);
+}
+function bacaFileExcelBestTime(file){
+  if(typeof XLSX==="undefined"){ showAlert("Gagal","Pustaka Excel (SheetJS) belum termuat. Periksa koneksi internet."); return; }
+  showLoading(true,"Membaca Berkas Excel Best Time…","Ekstraksi rekor atlet dari "+file.name+"…");
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=new Uint8Array(e.target.result);
+      var workbook=XLSX.read(data,{type:"array"});
+      var worksheet=workbook.Sheets[workbook.SheetNames[0]];
+      var jsonData=XLSX.utils.sheet_to_json(worksheet,{defval:""});
+      parsedImportDataList=[];
+      var formattedTanggal=formatKeIndo($("impTanggal").value);
+      var fallbackEventInput=$("impNamaEvent").value.trim();
+      var isFilterStrict=$("chkFilterStrictAcs").checked;
+      var acsClubRegex=/(ALL\s*CAN\s*SWIM|ACS\s*BANJARNEGARA|\bACS\b)/i;
+      jsonData.forEach(function(row){
+        var namaExcel=String(row["ATHLETE NAME"]||row["NAMA ATLET"]||row["ATHLETE"]||"").trim().toUpperCase();
+        var eventDesc=String(row["EVENT DESCRIPTION"]||row["NOMOR LOMBA"]||row["EVENT"]||"").trim().toUpperCase();
+        var timeStr=String(row["TIME"]||row["WAKTU"]||"").trim();
+        var clubExcel=String(row["TEAM"]||row["CLUB"]||row["KLUB"]||"").trim().toUpperCase();
+        if(!namaExcel||!eventDesc||!timeStr) return;
+        if(isFilterStrict&&clubExcel&&!acsClubRegex.test(clubExcel)) return;
+        var statusEventExcel=String(row["MODULE NAME"]||row["MODULE_NAME"]||row["MEET NAME"]||row["KEJUARAAN"]||"").trim();
+        if(!statusEventExcel) statusEventExcel=fallbackEventInput||$("txtNamaEventTerdekat").textContent||"Kejuaraan";
+        var atletMatch=globalMasterAtletList.find(function(a){
+          var p=a.panggilan.trim().toUpperCase(), l=a.lengkap.trim().toUpperCase();
+          return l===namaExcel||namaExcel.includes(l)||l.includes(namaExcel)||p===namaExcel;
+        });
+        if(isFilterStrict&&!atletMatch) return;
+        var namaPanggilan=atletMatch?atletMatch.panggilan:namaExcel.split(" ")[0];
+        var namaLengkap=atletMatch?atletMatch.lengkap:namaExcel;
+        var jarakMatch=eventDesc.match(/(50|100|200|400|800|1500)\s*M/i);
+        var jarak=jarakMatch?(jarakMatch[1]+"m"):"50m";
+        var kodeGaya="FR";
+        if(eventDesc.includes("FREESTYLE")||eventDesc.includes("BEBAS")) kodeGaya="FR";
+        else if(eventDesc.includes("BREASTSTROKE")||eventDesc.includes("DADA")) kodeGaya="BR";
+        else if(eventDesc.includes("BACKSTROKE")||eventDesc.includes("PUNGGUNG")) kodeGaya="BK";
+        else if(eventDesc.includes("BUTTERFLY")||eventDesc.includes("KUPU")) kodeGaya="BU";
+        else if(eventDesc.includes("MEDLEY")||eventDesc.includes("GANTI")) kodeGaya="IM";
+        var waktuClean=timeStr.replace(/^00:/,"").replace(/^0/,"");
+        parsedImportDataList.push({namaAtlet:namaPanggilan, namaLengkap:namaLengkap, nomorLomba:jarak+" "+kodeGaya, tanggal:formattedTanggal, waktu:waktuClean, status:statusEventExcel, checked:true});
+      });
+      showLoading(false);
+      if(!parsedImportDataList.length){ showAlert("Gagal","Tidak ada rekor atlet ACS yang cocok ditemukan."); return; }
+      renderTablePreviewImport();
+      toast("Berhasil mengurai "+parsedImportDataList.length+" rekor dari Excel.");
+    }catch(err){ showLoading(false); showAlert("Gagal Membaca Excel", err.toString()); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+async function bacaFileImport(inputEl){
+  if(!inputEl.files||!inputEl.files.length) return;
+  var file=inputEl.files[0];
+  showLoading(true,"Membaca File "+file.name+"…","Mempersiapkan ekstraksi PDF…");
+  try{
+    if(file.type==="application/pdf"||file.name.toLowerCase().endsWith(".pdf")){
+      if(typeof pdfjsLib==="undefined"){ showLoading(false); showAlert("Gagal","Pustaka PDF (pdf.js) belum termuat."); return; }
+      var arrayBuffer=await file.arrayBuffer();
+      var pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+      var fullLines=[];
+      for(var i=1;i<=pdf.numPages;i++){
+        showLoading(true,"Membaca PDF Halaman "+i+" dari "+pdf.numPages+"…","Mengekstrak baris hasil lomba…");
+        var page=await pdf.getPage(i);
+        var textContent=await page.getTextContent();
+        var lastY=null, lineStr="";
+        textContent.items.forEach(function(item){
+          if(lastY!==null&&Math.abs(item.transform[5]-lastY)>3){ if(lineStr.trim().length>0) fullLines.push(lineStr.trim()); lineStr=""; }
+          lineStr+=" "+item.str; lastY=item.transform[5];
+        });
+        if(lineStr.trim().length>0) fullLines.push(lineStr.trim());
+      }
+      $("txtImportArea").value=fullLines.join("\n");
+      showLoading(false);
+      toast("PDF berhasil dibaca! "+fullLines.length+" baris teks siap dianalisis.");
+    } else {
+      var reader=new FileReader();
+      reader.onload=function(e){ $("txtImportArea").value=e.target.result; showLoading(false); };
+      reader.readAsText(file);
+    }
+  }catch(e){ showLoading(false); showAlert("Gagal Membaca File","Error: "+e.toString()); }
+}
+function prosesAnalisisTeksKejuaraan(){
+  var rawText=$("txtImportArea").value;
+  if(!rawText||rawText.trim()===""){ showAlert("Perhatian","Unggah file PDF/Excel atau tempel teks hasil lomba terlebih dahulu!"); return; }
+  var formattedTanggal=formatKeIndo($("impTanggal").value);
+  var statusNamaEvent=$("impNamaEvent").value.trim()||"Kejuaraan";
+  var isFilterStrict=$("chkFilterStrictAcs").checked;
+  showLoading(true,"Menganalisis Hasil Lomba…","Mengekstrak data presisi per nomor lomba…");
+  setTimeout(function(){
+    try{
+      parsedImportDataList=[];
+      var lines=rawText.split("\n").map(function(l){ return l.trim(); }).filter(function(l){ return l.length>0; });
+      var acsClubRegex=/(ALL\s*CAN\s*SWIM|ALL\s*CAN\s*SWIM\s*CLUB|ACS\s*BANJARNEGARA|\bACS\b)/i;
+      var currentEventNomor="";
+      for(var i=0;i<lines.length;i++){
+        var lineUpper=lines[i].toUpperCase();
+        var eventMatch=lineUpper.match(/(50|100|200|400|800|1500)\s*(?:LC|SC)?\s*M(?:ETER|ETRES)?\s*(FREESTYLE|BREASTSTROKE|BACKSTROKE|BUTTERFLY|INDIVIDUAL MEDLEY|BEBAS|DADA|PUNGGUNG|KUPU|GANTI|FR|BR|BK|BU|IM)/i);
+        if(!eventMatch) eventMatch=lineUpper.match(/(50|100|200|400|800|1500)\s*M?.*?\b(FREESTYLE|BREASTSTROKE|BACKSTROKE|BUTTERFLY|INDIVIDUAL MEDLEY|BEBAS|DADA|PUNGGUNG|KUPU|GANTI|FR|BR|BK|BU|IM)\b/i);
+        if(eventMatch){
+          var jrk=eventMatch[1]+"m";
+          var gyRaw=eventMatch[2];
+          var kdGaya="FR";
+          if(gyRaw.includes("BREAST")||gyRaw.includes("DADA")||gyRaw==="BR") kdGaya="BR";
+          else if(gyRaw.includes("BACK")||gyRaw.includes("PUNGGUNG")||gyRaw==="BK") kdGaya="BK";
+          else if(gyRaw.includes("BUTTERFLY")||gyRaw.includes("KUPU")||gyRaw==="BU") kdGaya="BU";
+          else if(gyRaw.includes("MEDLEY")||gyRaw.includes("GANTI")||gyRaw==="IM") kdGaya="IM";
+          currentEventNomor=jrk+" "+kdGaya;
+          continue;
+        }
+        if(!currentEventNomor) continue;
+        var hasAcsClubName=acsClubRegex.test(lineUpper);
+        if(isFilterStrict&&!hasAcsClubName) continue;
+        var matchedAtletObj=null;
+        globalMasterAtletList.forEach(function(atlet){
+          var p=(atlet.panggilan||"").toUpperCase().trim();
+          var l=(atlet.lengkap||"").toUpperCase().trim();
+          if(l&&l.length>=3&&lineUpper.includes(l)) matchedAtletObj=atlet;
+          else if(p&&p.length>=3&&new RegExp("\\b"+p+"\\b","i").test(lineUpper)) matchedAtletObj=atlet;
+        });
+        if(isFilterStrict&&!matchedAtletObj) continue;
+        if(matchedAtletObj||hasAcsClubName){
+          var athleteChunk=lines.slice(i,Math.min(lines.length,i+3)).join(" ");
+          if(/\b(DQ|NS|DNF|SCR)\b/i.test(athleteChunk)) continue;
+          var timeMatches=athleteChunk.match(/(\d{1,2}:\d{2}[\.,]\d{2}|\d{1,2}[\.,]\d{2})/g);
+          if(timeMatches&&timeMatches.length>0){
+            var waktuFinal=timeMatches[0].replace(",",".");
+            var namaKey=matchedAtletObj?matchedAtletObj.panggilan:"";
+            var namaLengkapDisp=matchedAtletObj?matchedAtletObj.lengkap:"";
+            if(!namaKey){
+              var cleanText=lines[i].split(/(GROUP|ALL CAN SWIM|ACS)/i)[0].replace(/[^a-zA-Z\s]/g,"").trim();
+              namaKey=cleanText||"ATLET ACS"; namaLengkapDisp=cleanText||"ATLET ACS";
+            }
+            var isDuplicate=parsedImportDataList.some(function(item){
+              return item.namaAtlet.toUpperCase()===namaKey.toUpperCase()&&item.nomorLomba===currentEventNomor&&item.waktu===waktuFinal;
+            });
+            if(!isDuplicate){
+              parsedImportDataList.push({namaAtlet:namaKey, namaLengkap:namaLengkapDisp, nomorLomba:currentEventNomor, tanggal:formattedTanggal, waktu:waktuFinal, status:statusNamaEvent, checked:true});
+            }
+          }
+        }
+      }
+      showLoading(false);
+      if(!parsedImportDataList.length){
+        showAlert("Tidak Ada Data Terdeteksi","Tidak ditemukan hasil lomba dari atlet ALL CAN SWIM CLUB / ACS pada file ini.");
+        $("previewImportContainer").classList.add("hidden");
+        return;
+      }
+      renderTablePreviewImport();
+    }catch(err){ showLoading(false); showAlert("Gagal Analisis", err.toString()); }
+  },100);
+}
+function renderTablePreviewImport(){
+  var tbody=$("tblPreviewImportBody");
+  tbody.innerHTML="";
+  parsedImportDataList.forEach(function(item,idx){
+    tbody.innerHTML+="<tr>"+
+      "<td style='text-align:center'><input type='checkbox' "+(item.checked?"checked":"")+" onchange='parsedImportDataList["+idx+"].checked=this.checked'></td>"+
+      "<td style='font-weight:700'>"+esc(item.namaLengkap)+" <span class='small' style='color:var(--accent)'>("+esc(item.namaAtlet)+")</span></td>"+
+      "<td style='color:var(--amber);font-weight:600'>"+esc(item.nomorLomba)+"</td>"+
+      "<td class='mono' style='color:var(--accent);font-weight:700'>"+esc(item.waktu)+"</td>"+
+      "<td><span class='pill wait'>"+esc(item.status)+"</span></td></tr>";
+  });
+  $("cntImpData").innerText=parsedImportDataList.length;
+  $("previewImportContainer").classList.remove("hidden");
+}
+function toggleSelectAllImport(chkMaster){
+  parsedImportDataList.forEach(function(item){ item.checked=chkMaster.checked; });
+  renderTablePreviewImport();
+}
+function eksekusiSimpanMasal(){
+  var dataFinal=parsedImportDataList.filter(function(item){ return item.checked; });
+  if(!dataFinal.length){ showAlert("Perhatian","Pilih minimal 1 data yang dicentang!"); return; }
+  showConfirm("Konfirmasi Simpan Masal","Akan menyimpan "+dataFinal.length+" rekor waktu kejuaraan ke Rapot ACS. Lanjutkan?","Ya, Simpan Semua").then(function(ya){
+    if(!ya) return;
+    showLoading(true,"Menyimpan "+dataFinal.length+" Record ke Cloud…");
+    panggilBackend("simpanWaktuLatihanMasal", [getToken(), dataFinal]).then(function(resBackend){
+      showLoading(false);
+      if(tanganiResError(resBackend)) return;
+      var pesanImpor="Berhasil mengimpor "+(resBackend.disimpan||0)+" rekor waktu.";
+      if(resBackend.ditolak) pesanImpor+=" "+resBackend.ditolak+" baris ditolak (atlet tidak dikenal / duplikat / waktu tidak wajar).";
+      showAlert("Berhasil Impor!",pesanImpor).then(function(){
+        tutupModal("importMasalModal");
+        if(currentLoadedProfil) openAthleteProfile(currentLoadedProfil.namaPanggilan);
+        else muatAwalSistem();
+      });
+    }, gagalServer);
+  });
+}
+
+/* ---------- REGISTRASI ATLET ---------- */
+function bukaModalRegistrasi(){
+  if(!isPelatih()){ showAlert("Khusus Pelatih","Registrasi atlet baru hanya bisa dilakukan pelatih."); return; }
+  $("regPanggilan").value=""; $("regNama").value=""; $("regTgl").value=""; $("regNisn").value=""; $("regNik").value=""; $("regHp").value=""; $("regFoto").value="";
+  bukaModal("registrasiModal");
+}
+function prosesRegistrasiAtlet(){
+  var panggilan=$("regPanggilan").value.toUpperCase().trim();
+  var nama=$("regNama").value.trim();
+  var tgl=$("regTgl").value;
+  if(!panggilan||!nama||!tgl){ showAlert("Perhatian","Nama panggilan, nama lengkap, dan tanggal lahir wajib diisi!"); return; }
+  var paket={namaPanggilan:panggilan, namaLengkap:nama, tglLahir:formatKeIndo(tgl), gender:$("regGender").value, nisn:$("regNisn").value, nik:$("regNik").value, noHp:$("regHp").value, fotoBase64:""};
+  function kirim(){
+    showLoading(true,"Mendaftarkan atlet baru…");
+    panggilBackend("simpanRegistrasiAtletBaru", [getToken(), paket]).then(function(res){
+      showLoading(false);
+      if(tanganiResError(res)) return;
+      tutupModal("registrasiModal");
+      showAlert("Atlet Berhasil Didaftarkan","Atlet baru "+panggilan+" berhasil didaftarkan dan akun wali dibuat.\n\nUsername wali: "+res.username+"\nPassword sekali pakai: "+res.passwordSekali+"\n\nSIMPAN password ini — password hanya tampil sekali. Wali wajib menggantinya saat login pertama.").then(function(){
+        $("loginUsername").value=res.username||"";
+        muatAwalSistem(true,true);
+      });
+    }, gagalServer);
+  }
+  var fileInput=$("regFoto");
+  if(fileInput&&fileInput.files.length>0){
+    showLoading(true,"Mengompresi foto…");
+    kompresGambarBase64(fileInput.files[0],600,600,0.7,function(b64){ paket.fotoBase64=b64||""; kirim(); });
+  } else kirim();
+}
+
+/* ---------- PENGATURAN (UBAH PASSWORD) ---------- */
+function bukaSettings(){
+  $("setPassLama").value=""; $("setPassBaru").value="";
+  bukaModal("settingsModal");
+}
+function prosesUbahPassword(){
+  var lama=$("setPassLama").value, baru=$("setPassBaru").value;
+  if(!lama||!baru){ showAlert("Perhatian","Isi password lama dan password baru."); return; }
+  if(baru.length<6){ showAlert("Perhatian","Password baru minimal 6 karakter."); return; }
+  showLoading(true,"Mengubah password…");
+  panggilBackend("ubahPassword", [getToken(), lama, baru]).then(function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    tutupModal("settingsModal");
+    toast(res.success||"Password berhasil diubah.");
+    $("setPassLama").value=""; $("setPassBaru").value="";
+  }, gagalServer);
+}
+
+/* ---------- INIT ---------- */
+document.addEventListener("click", function(e){
+  var box1=$("wktSuggestBox"), box2=$("pdfSuggestBox");
+  if(box1 && !box1.classList.contains("hidden") && !e.target.closest("#wktSuggestBox") && e.target.id!=="wktNamaInput") box1.classList.add("hidden");
+  if(box2 && !box2.classList.contains("hidden") && !e.target.closest("#pdfSuggestBox") && e.target.id!=="pdfAtletInput") box2.classList.add("hidden");
+  var fab=$("fabSubMenu");
+  if(fab && !fab.classList.contains("hidden") && !e.target.closest("#fabSubMenu") && e.target.id!=="btnMainFab") fab.classList.add("hidden");
+});
+window.addEventListener("DOMContentLoaded", function(){
+  terapkanTema();
+  if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  $("wktTanggal").value=hariIniISO();
+  $("rekapPresensiBulan").value=bulanIniYM();
+  var savedEvent=localStorage.getItem("ACS_EVENT_TERDEKAT");
+  if(savedEvent) $("txtNamaEventTerdekat").textContent=savedEvent;
+  cekSessionLogin();
+});
+</script>
+</body>
+</html>
