@@ -601,7 +601,7 @@ function getNamaAtletList(token, paksaSegar) {
       var isAnakSendiri = (sesi.role === "wali") && (normalisasiNama(panggilan) === normalisasiNama(sesi.atletKey) || normalisasiNama(lengkap) === normalisasiNama(sesi.atletKey));
       if (sesi.role === "wali" && !isAnakSendiri) continue;
 
-      var foto = isAnakSendiri ? String(row[idxFoto] || "").trim() : "";
+      var foto = isAnakSendiri ? normalisasiUrlFoto(String(row[idxFoto] || "").trim()) : "";
       var noHp = (idxNoHp !== -1) ? String(row[idxNoHp] || "").replace(/'/g, '').trim() : "";
 
       if (panggilan !== "") {
@@ -668,6 +668,21 @@ function getNamaAtletList(token, paksaSegar) {
 // Dipisah dari getNamaAtletList agar foto base64 (besar) tidak masuk
 // cache 100KB dan tidak memperlambat daftar atlet. Wali tidak perlu
 // memanggil ini — fotonya sudah ada di getNamaAtletList (anak sendiri).
+// Ubah isi kolom FOTO menjadi URL gambar yang bisa ditampilkan <img>.
+// Menerima: link share Drive (file/d/ID/view, open?id=ID, uc?id=ID) ->
+// thumbnail Drive; data-URL base64 atau URL gambar langsung diteruskan
+// apa adanya. Syarat: file Drive harus dibagikan "Siapa saja yang
+// memiliki link" — kalau tidak, thumbnail tidak akan tampil.
+function normalisasiUrlFoto(nilai) {
+  var s = String(nilai || "").trim();
+  if (!s) return "";
+  if (s.indexOf("data:") === 0) return s;
+  var m = s.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/)
+    || s.match(/[?&]id=([A-Za-z0-9_-]{10,})/);
+  if (m) return "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w400";
+  return s;
+}
+
 function getFotoAtletMap(token) {
   var sesi;
   try {
@@ -690,7 +705,7 @@ function getFotoAtletMap(token) {
     for (var i = 1; i < dataProfil.length; i++) {
       var panggilan = String(dataProfil[i][idxPanggilan] || "").trim().toUpperCase();
       var foto = String(dataProfil[i][idxFoto] || "").trim();
-      if (panggilan && foto) peta[panggilan] = foto;
+      if (panggilan && foto) peta[panggilan] = normalisasiUrlFoto(foto);
     }
     return peta;
   } catch (err) {
@@ -847,7 +862,7 @@ function getAthleteData(token, namaPanggilan) {
               tglLahir: strTglFormatted,
               nisn: (idxNs !== -1 && row[idxNs] !== undefined && row[idxNs] !== "") ? String(row[idxNs]).replace(/'/g, '').trim() : "-",
               nik: (idxNk !== -1 && row[idxNk] !== undefined && row[idxNk] !== "") ? String(row[idxNk]).replace(/'/g, '').trim() : "-",
-              fotoBase64: (idxFt !== -1 && row[idxFt]) ? String(row[idxFt]).trim() : "",
+              fotoBase64: (idxFt !== -1 && row[idxFt]) ? normalisasiUrlFoto(String(row[idxFt]).trim()) : "",
               noHp: (idxHp !== -1 && row[idxHp]) ? String(row[idxHp]).replace(/'/g, '').trim() : ""
             };
             break;
