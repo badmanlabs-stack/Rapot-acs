@@ -664,6 +664,40 @@ function getNamaAtletList(token, paksaSegar) {
   }
 }
 
+// Peta foto atlet untuk pelatih: {PANGGILAN: "data:image/..."}.
+// Dipisah dari getNamaAtletList agar foto base64 (besar) tidak masuk
+// cache 100KB dan tidak memperlambat daftar atlet. Wali tidak perlu
+// memanggil ini — fotonya sudah ada di getNamaAtletList (anak sendiri).
+function getFotoAtletMap(token) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheetProfil = ss.getSheetByName("PROFIL_ATLET") || ss.getSheetByName("PROFIL");
+    if (!sheetProfil) return {};
+    var dataProfil = sheetProfil.getDataRange().getValues();
+    if (dataProfil.length < 2) return {};
+    var headersP = dataProfil[0];
+    var idxPanggilan = getColumnIndex(headersP, ["NAMA_PANGGILAN", "PANGGILAN", "KEY"]);
+    var idxFoto = getColumnIndex(headersP, ["FOTO_BASE64", "FOTO", "AVATAR"]);
+    if (idxPanggilan === -1) idxPanggilan = 0;
+    if (idxFoto === -1) idxFoto = 6;
+    var peta = {};
+    for (var i = 1; i < dataProfil.length; i++) {
+      var panggilan = String(dataProfil[i][idxPanggilan] || "").trim().toUpperCase();
+      var foto = String(dataProfil[i][idxFoto] || "").trim();
+      if (panggilan && foto) peta[panggilan] = foto;
+    }
+    return peta;
+  } catch (err) {
+    return { error: err.toString() };
+  }
+}
+
 // Internal: baca sheet PRESENSI_LATIHAN dan hitung statistik untuk
 // satu atlet (pencocokan nama persis). Mengembalikan
 // {totalSesi, hadir, izin, alpha, persen, riwayat10}.
@@ -1299,6 +1333,51 @@ function hapusBukuAcara(token, eventName) {
   });
 }
 
+// Sheet EVENT_LOMBA menyimpan metadata event yang dibuat pelatih
+// (belum ada pendaftar): NAMA_EVENT, TANGGAL, LOKASI, KATEGORI,
+// BIAYA_PER_NOMOR, DIBUAT_OLEH, TIMESTAMP.
+function tambahEventLomba(token, paket) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  return denganLock(function() {
+    try {
+      var namaEvent = String((paket && paket.namaEvent) || "").trim();
+      if (!namaEvent) return { error: "Nama event wajib diisi." };
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var sheet = ss.getSheetByName("EVENT_LOMBA");
+      if (!sheet) {
+        sheet = ss.insertSheet("EVENT_LOMBA");
+        sheet.appendRow(["NAMA_EVENT", "TANGGAL", "LOKASI", "KATEGORI", "BIAYA_PER_NOMOR", "DIBUAT_OLEH", "TIMESTAMP"]);
+      }
+      var data = sheet.getDataRange().getDisplayValues();
+      for (var i = 1; i < data.length; i++) {
+        if (String(data[i][0] || "").trim().toLowerCase() === namaEvent.toLowerCase()) {
+          return { error: "Event \"" + namaEvent + "\" sudah ada." };
+        }
+      }
+      // Cek juga di PENDAFTARAN_LOMBA (event lama yang sudah ada pendaftar).
+      var sheetP = ss.getSheetByName("PENDAFTARAN_LOMBA");
+      if (sheetP) {
+        var dataP = sheetP.getDataRange().getDisplayValues();
+        for (var j = 1; j < dataP.length; j++) {
+          if (String(dataP[j][0] || "").trim().toLowerCase() === namaEvent.toLowerCase()) {
+            return { error: "Event \"" + namaEvent + "\" sudah ada (di pendaftaran lama)." };
+          }
+        }
+      }
+      var biaya = parseFloat(paket.biayaPerNomor) || 0;
+      sheet.appendRow([namaEvent, String(paket.tanggal || ""), String(paket.lokasi || ""), String(paket.kategori || ""), biaya, sesi.username || sesi.atletKey || "pelatih", new Date()]);
+      return { success: "Event \"" + namaEvent + "\" berhasil ditambahkan.", eventName: namaEvent };
+    } catch (err) {
+      return { error: err.toString() };
+    }
+  });
+}
+
 function getDaftarEventLomba(token) {
   var sesi;
   try {
@@ -1308,19 +1387,23 @@ function getDaftarEventLomba(token) {
   }
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("PENDAFTARAN_LOMBA");
-    if (!sheet) return [];
-
-    var data = sheet.getDataRange().getDisplayValues();
-    if (data.length < 2) return [];
-
     var listEvent = [];
-    for (var i = 1; i < data.length; i++) {
-      var rawEv = String(data[i][0] || "").replace(/^'/, '').trim();
-      if (rawEv !== "") {
-        var isExist = listEvent.some(function(item) { return item.toUpperCase() === rawEv.toUpperCase(); });
-        if (!isExist) listEvent.push(rawEv);
-      }
+    function tambahKeDaftar(nama) {
+      var rawEv = String(nama || "").replace(/^'/, '').trim();
+      if (rawEv === "") return;
+      var isExist = listEvent.some(function(item) { return item.toUpperCase() === rawEv.toUpperCase(); });
+      if (!isExist) listEvent.push(rawEv);
+    }
+    var sheet = ss.getSheetByName("PENDAFTARAN_LOMBA");
+    if (sheet) {
+      var data = sheet.getDataRange().getDisplayValues();
+      for (var i = 1; i < data.length; i++) tambahKeDaftar(data[i][0]);
+    }
+    // + event yang dibuat pelatih tapi belum ada pendaftar (sheet EVENT_LOMBA).
+    var sheetEv = ss.getSheetByName("EVENT_LOMBA");
+    if (sheetEv) {
+      var dataEv = sheetEv.getDataRange().getDisplayValues();
+      for (var k = 1; k < dataEv.length; k++) tambahKeDaftar(dataEv[k][0]);
     }
     return listEvent;
   } catch (err) {
@@ -1667,6 +1750,14 @@ function hapusEventA3(token, eventName) {
         var ev = String(data[i][0] || "").trim().toLowerCase();
         if (ev === targetEv) {
           sheet.deleteRow(i + 1);
+        }
+      }
+      // Bersihkan juga metadata event (sheet EVENT_LOMBA) bila ada.
+      var sheetEv = ss.getSheetByName("EVENT_LOMBA");
+      if (sheetEv) {
+        var dataEv = sheetEv.getDataRange().getDisplayValues();
+        for (var k = dataEv.length - 1; k >= 1; k--) {
+          if (String(dataEv[k][0] || "").trim().toLowerCase() === targetEv) sheetEv.deleteRow(k + 1);
         }
       }
       return { success: "Event " + eventName + " beserta pendaftarannya berhasil dihapus!" };
@@ -2564,6 +2655,7 @@ var FUNGSI_DIIZINKAN = {
   getDaftarEventLomba: getDaftarEventLomba,
   getDaftarIzinLatihan: getDaftarIzinLatihan,
   getDaftarKonfirmasiSppCoach: getDaftarKonfirmasiSppCoach,
+  getFotoAtletMap: getFotoAtletMap,
   getHistoriSppSpesifikAtlet: getHistoriSppSpesifikAtlet,
   getHistoryPresensiSpesifikAtlet: getHistoryPresensiSpesifikAtlet,
   getJadwalBukuAcara: getJadwalBukuAcara,
@@ -2593,6 +2685,7 @@ var FUNGSI_DIIZINKAN = {
   simpanWaktuLatihan: simpanWaktuLatihan,
   simpanWaktuLatihanMasal: simpanWaktuLatihanMasal,
   submitKonfirmasiSppWali: submitKonfirmasiSppWali,
+  tambahEventLomba: tambahEventLomba,
   ubahPassword: ubahPassword
 };
 

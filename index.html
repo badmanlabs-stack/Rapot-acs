@@ -232,6 +232,77 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:spin 0.9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;z-index:90;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow);max-width:90vw;text-align:center}
+/* ============ SISTEM MOTION (v13.1) ============ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes modalIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes slideInSide{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes podRise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes growBar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes heroDrift{from{background-position:0 0}to{background-position:36px 18px}}
+@keyframes popIn{0%{opacity:0;transform:scale(.92)}70%{transform:scale(1.03)}100%{opacity:1;transform:scale(1)}}
+@keyframes drawLine{from{stroke-dashoffset:1400}to{stroke-dashoffset:0}}
+@keyframes dotIn{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+.view:not([hidden]){animation:viewIn .45s cubic-bezier(.22,.8,.3,1) both}
+.view:not([hidden])>*{animation:fadeUp .55s cubic-bezier(.22,.8,.3,1) both}
+.view:not([hidden])>*:nth-child(2){animation-delay:.06s}
+.view:not([hidden])>*:nth-child(3){animation-delay:.12s}
+.view:not([hidden])>*:nth-child(4){animation-delay:.18s}
+.view:not([hidden])>*:nth-child(5){animation-delay:.24s}
+.side{animation:slideInSide .5s cubic-bezier(.22,.8,.3,1) both}
+.side-link{transition:background .2s ease,color .2s ease,transform .2s ease}
+.side-link:active{transform:scale(.98)}
+.hero:after{animation:heroDrift 7s linear infinite alternate}
+.hero h2,.hero p{animation:fadeUp .6s cubic-bezier(.22,.8,.3,1) both}
+.hero p{animation-delay:.08s}
+.stat{animation:popIn .5s cubic-bezier(.22,.8,.3,1) both}
+.stat-grid .stat:nth-child(2){animation-delay:.06s}
+.stat-grid .stat:nth-child(3){animation-delay:.12s}
+.stat-grid .stat:nth-child(4){animation-delay:.18s}
+.tile{transition:border-color .2s ease,box-shadow .25s ease,transform .25s cubic-bezier(.22,.8,.3,1)}
+.tile:hover{transform:translateY(-3px)}
+.tile:active{transform:translateY(-1px) scale(.99)}
+.btn{transition:background .2s ease,border-color .2s ease,transform .15s ease,box-shadow .2s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
+.fchip,.tabs button{transition:background .2s ease,color .2s ease,border-color .2s ease,transform .15s ease}
+.fchip:active,.tabs button:active{transform:scale(.96)}
+.athlete-row{animation:fadeUp .4s cubic-bezier(.22,.8,.3,1) both;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.athlete-row:hover{transform:translateX(3px)}
+.cat{transition:border-color .2s ease,transform .2s ease}
+.cat:hover{transform:translateY(-2px)}
+.pod{animation:podRise .6s cubic-bezier(.22,.8,.3,1) both}
+.pod:nth-child(1){animation-delay:.10s}
+.pod:nth-child(2){animation-delay:0s}
+.pod:nth-child(3){animation-delay:.2s}
+.bar-fill{transform-origin:left center;animation:growBar .9s cubic-bezier(.22,.8,.3,1) both}
+.progress>i{transition:width .35s ease}
+.pb{animation:popIn .45s cubic-bezier(.22,.8,.3,1) both;transition:transform .2s ease,border-color .2s ease}
+.pb:hover{transform:translateY(-2px)}
+.modal-back{animation:fadeIn .25s ease both}
+.modal{animation:modalIn .35s cubic-bezier(.22,.8,.3,1) both}
+.toast{animation:toastIn .3s cubic-bezier(.22,.8,.3,1) both}
+.fab{transition:transform .2s ease,background .2s ease}
+.fab:hover{transform:scale(1.07) rotate(90deg)}
+.fab-menu{animation:modalIn .28s cubic-bezier(.22,.8,.3,1) both;transform-origin:bottom right}
+.bottomnav button{transition:color .2s ease,transform .15s ease}
+.bottomnav button:active{transform:scale(.94)}
+#myChart path{stroke-dasharray:1400;animation:drawLine 1.3s ease both}
+#myChart circle{transform-origin:center;transform-box:fill-box;animation:dotIn .4s ease both;animation-delay:.7s}
+#myChart circle:hover{stroke:var(--bg);stroke-width:2}
+.seg button,.swatch{transition:all .2s ease}
+.swatch:hover{transform:scale(1.15)}
+.input{transition:border-color .2s ease,box-shadow .2s ease}
+.avatar img{animation:fadeIn .4s ease both}
+.chart-tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;box-shadow:var(--shadow);white-space:nowrap;z-index:5;transform:translate(-50%,-115%)}
+.chart-box{position:relative}
+.qr-frame{border:2px dashed var(--line);border-radius:12px;overflow:hidden;background:#000}
+.qr-frame video,.qr-frame canvas,.qr-frame img{width:100%!important}
+@media (prefers-reduced-motion: reduce){
+  *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
 /* Login */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,var(--hero-1),var(--bg) 65%)}
 .login-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px;width:100%;max-width:400px;box-shadow:var(--shadow)}
@@ -427,8 +498,15 @@ input[type=file]{font-size:13px}
             <div id="presensiChecklist"></div>
           </div>
           <div id="panelPresensiQr" hidden>
-            <p class="small muted" style="margin-bottom:10px">Foto kode QR atlet (nama panggilan). Bila perangkat tidak mendukung pemindai, isi nama secara manual.</p>
-            <input type="file" id="presensiQrFile" accept="image/*" capture="environment" class="input" onchange="prosesQrPresensi()">
+            <p class="small muted" style="margin-bottom:10px">Arahkan kamera ke kode QR atlet (nama panggilan). Hasil scan langsung tercatat sebagai "Hadir".</p>
+            <div id="qrReader" class="qr-frame" style="width:100%;max-width:340px;margin:0 auto 10px;display:none"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button class="btn primary" id="btnMulaiQr" onclick="mulaiQrKamera()">📷 Mulai Kamera</button>
+              <button class="btn danger" id="btnStopQr" onclick="hentikanQrKamera()" hidden>⏹ Berhenti</button>
+            </div>
+            <div id="qrKameraStatus" class="small muted" style="margin-top:8px"></div>
+            <div class="field" style="margin-top:12px"><label class="lbl">Atau scan dari file gambar QR:</label>
+            <input type="file" id="presensiQrFile" accept="image/*" capture="environment" class="input" onchange="prosesQrPresensi()"></div>
             <div id="presensiQrHasil" class="small" style="margin-top:10px"></div>
             <div class="field" style="margin-top:12px"><label class="lbl">Atau isi nama panggilan manual</label>
               <div style="display:flex;gap:8px"><input id="presensiQrNamaManual" class="input" placeholder="cth: BAGUS"><button class="btn primary" onclick="fallbackQrManual(true)">Simpan Hadir</button></div></div>
@@ -497,6 +575,7 @@ input[type=file]{font-size:13px}
       <div class="phead"><div class="grow"><h1>Pendaftaran Lomba</h1><p>Daftar atlet ke kejuaraan &amp; rekap A3 (biaya per nomor).</p></div>
         <div class="actions">
           <button class="btn" onclick="bukaViewerBukuAcara()">Lihat Buku Acara</button>
+          <button class="btn hanya-pelatih" onclick="bukaModalTambahEvent()">+ Tambah Event</button>
           <button class="btn primary hanya-pelatih" onclick="bukaModalPendaftaranLomba()">+ Daftarkan Atlet</button>
         </div>
       </div>
@@ -533,7 +612,7 @@ input[type=file]{font-size:13px}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div class="field"><label class="lbl">Tanggal</label><input type="date" id="wktTanggal" class="input"></div>
-            <div class="field"><label class="lbl">Waktu (cth: 0:36.26 atau 36.26)</label><input id="wktWaktu" class="input mono" placeholder="0:36.26"></div>
+            <div class="field"><label class="lbl">Waktu (cth: 0:36.26 atau 36.26)</label><input id="wktWaktu" class="input mono" placeholder="0:36.26" inputmode="numeric" autocomplete="off"><div class="small muted" id="wktWaktuHint">Ketik angka saja — otomatis jadi m:ss.cc (cth: 10144 → 1:01.44)</div></div>
           </div>
           <div class="field"><label class="lbl">Status</label><select id="wktStatus" class="input"><option>Latihan</option><option>Kejuaraan</option></select></div>
           <label class="small" style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="chkKirimWa" checked> Kirim notifikasi WA ke wali (bila ada nomor)</label>
@@ -696,6 +775,25 @@ input[type=file]{font-size:13px}
   </div>
 </div>
 
+<!-- ===== MODAL: TAMBAH EVENT LOMBA ===== -->
+<div class="modal-back hidden" id="tambahEventModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head"><h3>Tambah Event Lomba</h3><button class="x-btn" onclick="tutupModal('tambahEventModal')">✕</button></div>
+    <p class="m-sub">Event baru langsung muncul di daftar event &amp; rekap A3 — atlet bisa didaftarkan ke event ini lewat "+ Daftarkan Atlet".</p>
+    <div class="field"><label class="lbl">Nama Event *</label><input id="evtNama" class="input" placeholder="cth: Kejuaraan Renang Antar Klub 2026"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label class="lbl">Tanggal</label><input type="date" id="evtTanggal" class="input"></div>
+      <div class="field"><label class="lbl">Kategori</label><select id="evtKategori" class="input"><option>Resmi</option><option>Fun</option><option>Krapsi</option><option>Kras</option></select></div>
+    </div>
+    <div class="field"><label class="lbl">Lokasi</label><input id="evtLokasi" class="input" placeholder="cth: Kolam Renang Tirta Kencana"></div>
+    <div class="field"><label class="lbl">Biaya per Nomor (Rp)</label><input type="number" id="evtBiaya" class="input" value="50000" min="0" step="1000"></div>
+    <div class="m-actions">
+      <button class="btn" onclick="tutupModal('tambahEventModal')">Batal</button>
+      <button class="btn primary" onclick="prosesSimpanEventBaru()">Simpan Event</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== MODAL: EDIT EVENT A3 ===== -->
 <div class="modal-back hidden" id="modalEditEventA3">
   <div class="modal" style="max-width:440px">
@@ -835,6 +933,26 @@ function setAksen(a){ simpanTema(null,a); }
 /* ---------- state global ---------- */
 var currentUserSession=null;
 var globalMasterAtletList=[];
+var globalFotoMap={};
+/* Foto atlet (pelatih): diambil terpisah dari daftar agar daftar tetap
+   ringan dan tidak kena batas cache 100KB. Wali tidak perlu — fotonya
+   sudah ada di daftar (anak sendiri). */
+function muatFotoAtlet(){
+  if(!isPelatih()) return;
+  panggilBackend("getFotoAtletMap", [getToken()]).then(function(res){
+    if(!res || res.error) return;
+    globalFotoMap=res;
+    var berubah=false;
+    globalMasterAtletList.forEach(function(a){
+      var f=globalFotoMap[a.panggilan];
+      if(f && a.foto!==f){ a.foto=f; berubah=true; }
+    });
+    if(berubah){
+      renderAtletGrid();
+      if(!$("view-presensi").hidden) muatChecklistPresensi();
+    }
+  });
+}
 var currentLoadedProfil=null;
 var globalRiwayat=[];
 var globalBestTimes={};
@@ -955,6 +1073,7 @@ function prosesAuthentikasi(){
   }});
 }
 function prosesLogout(){
+  hentikanQrKamera();
   showConfirm("Keluar?","Anda akan keluar dari ACS HUB di perangkat ini.","Ya, Keluar").then(function(ya){
     if(!ya) return;
     currentUserSession=null; localStorage.removeItem("ACS_SESSION");
@@ -979,6 +1098,7 @@ function terapkanHakAksesUser(){
 /* ---------- router antar view ---------- */
 var VIEW_IDS=["dashboard","atlet","rapot","hof","presensi","spp","lomba","input"];
 function navKe(nama){
+  if(nama!=="presensi") hentikanQrKamera();
   VIEW_IDS.forEach(function(v){ var el=$("view-"+v); if(el) el.hidden=(v!==nama); });
   document.querySelectorAll("[data-nav]").forEach(function(el){ el.classList.toggle("active", el.getAttribute("data-nav")===nama); });
   window.scrollTo({top:0});
@@ -1011,6 +1131,49 @@ function formatDetikKeMenit(detik){
   var m=Math.floor(detik/60), s=detik-m*60;
   return m+":"+(s<10?"0":"")+s.toFixed(2);
 }
+/* ---------- mask input waktu renang (format baku m:ss.cc) ---------- */
+/* Ketik angka saja -> otomatis terformat. 2 digit terakhir = centidetik,
+   2 digit sebelumnya = detik, sisanya = menit. Contoh: 10144 -> 1:01.44 */
+function formatWaktuDariDigit(digit){
+  var d=String(digit||"").replace(/\D/g,"").slice(0,7);
+  if(!d) return "";
+  if(d.length<=2) return d;
+  if(d.length<=4) return d.slice(0,-2)+"."+d.slice(-2);
+  return d.slice(0,-4)+":"+d.slice(-4,-2)+"."+d.slice(-2);
+}
+/* Normalisasi nilai lama (mis. dari riwayat): "1..01.44" -> "1:01.44".
+   Kalau detiknya >=60 (mis. "3:74.87"), kembalikan apa adanya agar
+   user memperbaikinya sendiri dan validasi simpan yang menolaknya. */
+function normalisasiWaktuInput(str){
+  var d=String(str||"").replace(/\D/g,"");
+  if(!d) return str;
+  if(d.length>=3 && parseInt(d.slice(-4,-2),10)>=60) return str;
+  return formatWaktuDariDigit(d);
+}
+function pasangMaskWaktu(el, hintEl){
+  if(!el) return;
+  var terakhir=el.value;
+  el.addEventListener("input", function(){
+    var d=el.value.replace(/\D/g,"").slice(0,7);
+    if(d.length>=3){
+      var detik=parseInt(d.slice(-4,-2),10);
+      if(detik>=60){
+        el.value=terakhir;
+        if(hintEl){ hintEl.textContent="Detik tidak boleh 60 atau lebih — contoh benar: 1:01.44"; hintEl.style.color="var(--red)"; }
+        return;
+      }
+    }
+    el.value=formatWaktuDariDigit(d);
+    terakhir=el.value;
+    if(hintEl){ hintEl.textContent="Ketik angka saja — otomatis jadi m:ss.cc (cth: 10144 → 1:01.44)"; hintEl.style.color=""; }
+  });
+  el.addEventListener("blur", function(){
+    if(el.value && parseKeDetikMurni(el.value)<=0){
+      if(hintEl){ hintEl.textContent="Waktu tidak valid — cek lagi formatnya (cth: 1:01.44)."; hintEl.style.color="var(--red)"; }
+    }
+  });
+}
+pasangMaskWaktu($("wktWaktu"), $("wktWaktuHint"));
 function hitungKU(tglLahirStr){
   if(!tglLahirStr) return "KU IV";
   var str=String(tglLahirStr).trim(), d=null;
@@ -1035,23 +1198,41 @@ function muatAwalSistem(isExplicitBack, paksaSegar){
     globalMasterAtletList=Array.isArray(res)?res:[];
     atletTampilSemua=false;
     renderDashboardStats(); renderAtletGrid(); renderHallOfFameTercepat(); renderHofMini();
+    muatFotoAtlet();
     if(isWali() && currentUserSession.atletKey && !isExplicitBack){
       openAthleteProfile(currentUserSession.atletKey);
     }
     muatRingkasanBulan();
   }});
 }
+/* ---------- animasi angka (count-up, hormati prefers-reduced-motion) ---------- */
+function animasiAngka(el, target, akhiran){
+  if(!el) return;
+  akhiran=akhiran||"";
+  var kurangi=false;
+  try{ kurangi=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  if(kurangi || !window.requestAnimationFrame){ el.textContent=target+akhiran; return; }
+  var mulai=null, durasi=650;
+  function langkah(ts){
+    if(!mulai) mulai=ts;
+    var p=Math.min(1,(ts-mulai)/durasi);
+    var eased=1-Math.pow(1-p,3);
+    el.textContent=Math.round(target*eased)+akhiran;
+    if(p<1) requestAnimationFrame(langkah);
+  }
+  requestAnimationFrame(langkah);
+}
 function renderDashboardStats(){
   var total=globalMasterAtletList.length;
-  $("statTotalAtlet").textContent=total+" Siswa";
+  animasiAngka($("statTotalAtlet"), total, " Siswa");
   $("txtJumlahAtlet").textContent=total+" atlet terdaftar";
   var berPb=0, totalPb=0;
   globalMasterAtletList.forEach(function(a){
     var map=a.allPbMap||{}; var n=Object.keys(map).length;
     if(n>0) berPb++; totalPb+=n;
   });
-  $("statAtletPb").textContent=berPb;
-  $("statTotalPb").textContent=totalPb;
+  animasiAngka($("statAtletPb"), berPb);
+  animasiAngka($("statTotalPb"), totalPb);
 }
 function muatRingkasanBulan(){
   var box=$("ringkasanBulan"), sub=$("txtRingkasanBulan");
@@ -1238,7 +1419,7 @@ function renderProfilePage(res){
   h+='<select id="selectKategoriGrafik" class="input" style="width:130px" onchange="filterGrafikDanTabel()"><option value="all">Semua</option><option value="Latihan">Latihan</option><option value="Kejuaraan">Kejuaraan</option></select>';
   h+='<select id="selectLimitSesi" class="input" style="width:110px" onchange="filterGrafikDanTabel()"><option value="5">5 sesi</option><option value="10" selected>10 sesi</option><option value="20">20 sesi</option><option value="all">Semua</option></select>';
   h+='<span style="flex:1"></span><button class="btn primary hanya-pelatih" onclick="bukaPanelWaktu()">+ Input Waktu</button>';
-  h+='</div><div class="chart-box" id="chartBox"><p class="empty" id="emptyChartMsg">Pilih nomor lomba untuk melihat grafik.</p><svg id="myChart" width="100%" height="220" viewBox="0 0 600 220" preserveAspectRatio="none" style="display:none"></svg></div>';
+  h+='</div><div class="chart-box" id="chartBox"><p class="empty" id="emptyChartMsg">Pilih nomor lomba untuk melihat grafik.</p><div id="chartLegend" class="small" style="display:none;margin-bottom:6px"><span style="color:#00d4b2">●</span> Latihan &nbsp; <span style="color:#f59e0b">●</span> Kejuaraan &nbsp; <span class="muted">(waktu kecil di atas — makin cepat makin tinggi; arahkan kursor ke titik untuk detail)</span></div><div id="chartTip" class="chart-tip" hidden></div><svg id="myChart" width="100%" height="220" viewBox="0 0 600 220" preserveAspectRatio="none" style="display:none"></svg></div>';
   h+='<div class="tbl-wrap" style="margin-top:12px"><table class="tbl"><thead><tr><th>Tanggal</th><th>Nomor</th><th>Waktu</th><th>Status</th><th></th></tr></thead><tbody id="tabelRiwayatBody"></tbody></table></div>';
   h+='</div>';
   /* Presensi + SPP ringkas */
@@ -1258,6 +1439,7 @@ function renderProfilePage(res){
 function renderChartSvg(points){
   var svg=$("myChart"); if(!svg) return;
   var W=600,H=220,PAD=28;
+  var leg=$("chartLegend"); if(leg) leg.style.display=points.length?"block":"none";
   if(!points.length){ svg.style.display="none"; $("emptyChartMsg").style.display="block"; return; }
   $("emptyChartMsg").style.display="none"; svg.style.display="block";
   var vals=points.map(function(p){ return p.detik; });
@@ -1272,13 +1454,31 @@ function renderChartSvg(points){
   function pathFor(list,color){
     if(list.length<1) return "";
     var d=""; list.forEach(function(p,i){ var xi=X(points.indexOf(p)); d+=(i===0?"M":"L")+xi.toFixed(1)+" "+Y(p.detik).toFixed(1)+" "; });
-    var dots=list.map(function(p){ var xi=X(points.indexOf(p)); return '<circle cx="'+xi.toFixed(1)+'" cy="'+Y(p.detik).toFixed(1)+'" r="4" fill="'+color+'"/>'; }).join("");
+    var dots=list.map(function(p){
+      var xi=X(points.indexOf(p));
+      return '<circle cx="'+xi.toFixed(1)+'" cy="'+Y(p.detik).toFixed(1)+'" r="4.5" fill="'+color+'" data-tgl="'+esc(p.tanggal||"")+'" data-waktu="'+formatDetikKeMenit(p.detik)+'" data-status="'+esc(p.status||"")+'"><title>'+esc(p.tanggal||"")+' — '+formatDetikKeMenit(p.detik)+' ('+esc(p.status||"")+')</title></circle>';
+    }).join("");
     return '<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="2.5"/>'+dots;
   }
   out+=pathFor(lat,"#00d4b2")+pathFor(kej,"#f59e0b");
   out+='<text x="'+PAD+'" y="'+(H-4)+'" font-size="10" fill="var(--ink-3)">'+esc(points[0].tanggal||"")+'</text>';
   out+='<text x="'+(W-PAD-70)+'" y="'+(H-4)+'" font-size="10" fill="var(--ink-3)">'+esc(points[points.length-1].tanggal||"")+'</text>';
   svg.innerHTML=out;
+  pasangTooltipGrafik();
+}
+function pasangTooltipGrafik(){
+  var svg=$("myChart"), tip=$("chartTip"), box=$("chartBox");
+  if(!svg||!tip||!box) return;
+  svg.querySelectorAll("circle").forEach(function(c){
+    c.addEventListener("mouseenter", function(){
+      tip.textContent=(c.getAttribute("data-tgl")||"")+" · "+(c.getAttribute("data-waktu")||"")+" ("+(c.getAttribute("data-status")||"")+")";
+      var r=c.getBoundingClientRect(), br=box.getBoundingClientRect();
+      tip.style.left=((r.left-br.left)+r.width/2)+"px";
+      tip.style.top=((r.top-br.top))+"px";
+      tip.hidden=false;
+    });
+    c.addEventListener("mouseleave", function(){ tip.hidden=true; });
+  });
 }
 function filterGrafikDanTabel(){
   var jarak=$("selectJarak")?$("selectJarak").value:"50m";
@@ -1320,7 +1520,7 @@ function editWaktuHistori(rowIndex, nomorLomba, tanggal, waktu, status){
   if(currentLoadedProfil){ $("wktNamaHidden").value=currentLoadedProfil.namaPanggilan; $("wktNamaInput").value=(currentLoadedProfil.namaLengkap||"")+" ("+currentLoadedProfil.namaPanggilan+")"; }
   if(m){ $("inputJarak").value=m[1]; $("inputGaya").value=m[2]; }
   $("wktTanggal").value=formatKeValidDate(tanggal);
-  $("wktWaktu").value=waktu;
+  $("wktWaktu").value=normalisasiWaktuInput(waktu);
   $("wktStatus").value=status||"Latihan";
   $("wktModalTitle").textContent="Edit Waktu (baris #"+rowIndex+")";
   window.scrollTo({top:0});
@@ -1571,6 +1771,7 @@ function siapkanViewPresensi(){
   muatChecklistPresensi();
 }
 function setTabPresensi(tab){
+  if(tab!=="qr") hentikanQrKamera();
   $("tabPresensiManual").classList.toggle("active", tab==="manual");
   $("tabPresensiQr").classList.toggle("active", tab==="qr");
   $("panelPresensiManual").hidden=(tab!=="manual");
@@ -1586,7 +1787,7 @@ function muatChecklistPresensi(){
   var h="";
   list.forEach(function(a){
     var key=esc(a.panggilan).replace(/'/g,"\\'");
-    h+='<div class="athlete-row" style="cursor:default">'+avatarHtml(a.lengkap)+
+    h+='<div class="athlete-row" style="cursor:default">'+avatarFotoHtml(a.foto,a.lengkap)+
       '<div style="flex:1;min-width:0"><b>'+esc(a.lengkap||"-")+'</b><br><span class="small muted">'+hitungKU(a.tglLahir)+' · '+esc(a.panggilan||"")+'</span></div>'+
       '<select class="input" style="width:110px" id="presStatus-'+esc(a.panggilan)+'"><option>Hadir</option><option>Izin</option><option>Alpha</option></select>'+
       '<button class="btn sm primary" onclick="simpanPresensiAtlet(\''+key+'\', document.getElementById(\'presStatus-'+esc(a.panggilan)+'\').value, \'Checklist Manual\')">Simpan</button></div>';
@@ -1616,6 +1817,61 @@ function prosesQrPresensi(){
       } else { fallbackQrManual(false); }
     }).catch(function(){ fallbackQrManual(false); });
   } else { fallbackQrManual(false); }
+}
+/* ---------- scan QR kamera live (html5-qrcode via CDN, dimuat saat dipakai) ---------- */
+var qrScanner=null, qrKameraAktif=false;
+function muatLibraryQr(){
+  return new Promise(function(resolve, reject){
+    if(window.Html5Qrcode){ resolve(); return; }
+    var s=document.createElement("script");
+    s.src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js";
+    s.onload=function(){ resolve(); };
+    s.onerror=function(){ reject(new Error("Gagal memuat library QR")); };
+    document.head.appendChild(s);
+  });
+}
+function mulaiQrKamera(){
+  var statusEl=$("qrKameraStatus");
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    if(statusEl) statusEl.textContent="Kamera tidak didukung di perangkat/browser ini — pakai pilih file atau isi manual di bawah.";
+    return;
+  }
+  if(statusEl) statusEl.textContent="Memuat kamera…";
+  muatLibraryQr().then(function(){
+    if(!qrScanner) qrScanner=new Html5Qrcode("qrReader");
+    $("qrReader").style.display="block";
+    return qrScanner.start({facingMode:"environment"}, {fps:10, qrbox:{width:250,height:250}}, function(teks){
+      hentikanQrKamera();
+      prosesHasilQr(teks);
+    }, function(){ /* abaikan error scan per-frame */ });
+  }).then(function(){
+    qrKameraAktif=true;
+    $("btnMulaiQr").hidden=true; $("btnStopQr").hidden=false;
+    if(statusEl) statusEl.textContent="Kamera aktif — arahkan ke kode QR atlet.";
+  }).catch(function(err){
+    if(statusEl) statusEl.textContent="Kamera tidak bisa dibuka ("+(err&&err.message?err.message:"izin ditolak")+") — pakai pilih file atau isi manual di bawah.";
+    var rd=$("qrReader"); if(rd) rd.style.display="none";
+  });
+}
+function hentikanQrKamera(){
+  if(qrScanner && qrKameraAktif){
+    try{
+      var p=qrScanner.stop();
+      if(p && p.then) p.then(function(){ try{ qrScanner.clear(); }catch(e){} }).catch(function(){});
+      else { try{ qrScanner.clear(); }catch(e){} }
+    }catch(e){}
+  }
+  qrKameraAktif=false;
+  var rd=$("qrReader"); if(rd) rd.style.display="none";
+  var b1=$("btnMulaiQr"), b2=$("btnStopQr");
+  if(b1) b1.hidden=false; if(b2) b2.hidden=true;
+}
+function prosesHasilQr(teks){
+  var nama=(teks||"").trim().toUpperCase();
+  if(!nama){ toast("Kode QR kosong."); return; }
+  var hasil=$("presensiQrHasil");
+  if(hasil) hasil.textContent="QR terbaca: "+nama+" — menyimpan sebagai Hadir…";
+  simpanPresensiAtlet(nama,"Hadir","Scan QR");
 }
 function fallbackQrManual(dariTombol){
   var nama="";
@@ -1726,8 +1982,14 @@ function muatDaftarKonfirmasiSpp(){
     var arr=Array.isArray(res)?res:[];
     var box=$("sppKonfirmasiList");
     if(!arr.length){ box.innerHTML='<p class="empty">Tidak ada konfirmasi SPP untuk bulan ini.</p>'; return; }
+    var pending=arr.filter(function(r){ return String(r.status||"").toUpperCase()==="PENDING VERIFIKASI"; });
+    if(!pending.length){
+      var nLunas=arr.filter(function(r){ return String(r.status||"").toUpperCase()==="LUNAS"; }).length;
+      var nTolak=arr.filter(function(r){ return String(r.status||"").toUpperCase()==="DITOLAK"; }).length;
+      box.innerHTML='<p class="empty">Semua konfirmasi bulan ini sudah diproses ✓ ('+nLunas+' Lunas, '+nTolak+' Ditolak). Lihat Matriks SPP Tahunan di bawah.</p>'; return;
+    }
     var h="";
-    arr.forEach(function(r){
+    pending.forEach(function(r){
       var st=r.status||"-";
       var pillCls=st==="LUNAS"?"ok":st==="DITOLAK"?"danger":"wait";
       h+='<div class="act"><div style="flex:1;min-width:0"><b>'+esc(r.namaLengkap||r.namaPanggilan||"-")+'</b> <span class="small muted">('+esc(r.namaPanggilan||"")+' · '+esc(r.bulanTahun||"-")+')</span><br><span class="mono small">'+formatRupiah(r.nominal||0)+'</span> '+(r.fotoBukti?'<button class="btn sm" onclick="zoomFoto(\''+esc(r.fotoBukti).replace(/'/g,"")+'\',\'Bukti SPP '+esc(r.namaPanggilan||"")+'\')">Lihat Bukti</button>':"")+'</div><span class="pill '+pillCls+'">'+esc(st)+'</span>';
@@ -1746,6 +2008,7 @@ function verifikasiSpp(rowIndex, statusBaru){
     if(tanganiResError(res)) return;
     toast(res.success||"Status SPP diperbarui.");
     muatDaftarKonfirmasiSpp();
+    muatMatriksSpp();
   }});
 }
 function hapusSppBaris(rowIndex){
@@ -1757,6 +2020,7 @@ function hapusSppBaris(rowIndex){
       if(tanganiResError(res)) return;
       toast(res.success||"Konfirmasi SPP dihapus.");
       muatDaftarKonfirmasiSpp();
+      muatMatriksSpp();
     }});
   });
 }
@@ -1789,6 +2053,24 @@ function muatMatriksSpp(){
 }
 
 /* ---------- PENDAFTARAN LOMBA + REKAP A3 ---------- */
+/* ---------- tambah event lomba (baru, v13.1) ---------- */
+function bukaModalTambahEvent(){
+  if(!isPelatih()) return;
+  $("evtNama").value=""; $("evtTanggal").value=""; $("evtLokasi").value=""; $("evtKategori").value="Resmi"; $("evtBiaya").value="50000";
+  bukaModal("tambahEventModal");
+}
+function prosesSimpanEventBaru(){
+  var nama=($("evtNama").value||"").trim();
+  if(!nama){ showAlert("Perhatian","Nama event wajib diisi."); return; }
+  var paket={namaEvent:nama, tanggal:$("evtTanggal").value||"", lokasi:($("evtLokasi").value||"").trim(), kategori:$("evtKategori").value||"", biayaPerNomor:parseFloat($("evtBiaya").value)||0};
+  panggilServer("tambahEventLomba",[getToken(), paket],{ pesan:"Menambah event…", autoRetry:false, onSukses:function(res){
+    showLoading(false);
+    if(tanganiResError(res)) return;
+    toast(res.success||"Event berhasil ditambahkan.");
+    tutupModal("tambahEventModal");
+    bukaModalRekapA3Data();
+  }});
+}
 function bukaModalPendaftaranLomba(namaPanggilanAtlet, eventTerpilih){
   if(!isPelatih()){ showAlert("Khusus Pelatih","Pendaftaran lomba hanya bisa dilakukan pelatih. Wali dapat melihat rekap di menu Lomba."); return; }
   bukaModal("pendaftaranLombaModal");
@@ -1827,7 +2109,7 @@ function handlePendaftaranAtletSuggest(){
   if(matches.length){
     var html="";
     matches.forEach(function(it){
-      html+='<div onclick="pilihAtletPendaftaranSuggest(\''+esc(it.panggilan).replace(/'/g,"\\'")+'\',\''+esc(it.lengkap).replace(/'/g,"\\'")+'\',\''+esc(it.gender||"")+'\',\''+esc(it.noHp||"")+'\')" style="padding:8px;cursor:pointer;display:flex;gap:10px;align-items:center">'+avatarHtml(it.lengkap,"sm")+'<div><b style="font-size:13px">'+esc(it.lengkap)+'</b><br><span class="small muted">Panggilan: '+esc(it.panggilan)+'</span></div></div>';
+      html+='<div onclick="pilihAtletPendaftaranSuggest(\''+esc(it.panggilan).replace(/'/g,"\\'")+'\',\''+esc(it.lengkap).replace(/'/g,"\\'")+'\',\''+esc(it.gender||"")+'\',\''+esc(it.noHp||"")+'\')" style="padding:8px;cursor:pointer;display:flex;gap:10px;align-items:center">'+avatarFotoHtml(it.foto,it.lengkap,"sm")+'<div><b style="font-size:13px">'+esc(it.lengkap)+'</b><br><span class="small muted">Panggilan: '+esc(it.panggilan)+'</span></div></div>';
     });
     box.innerHTML=html; box.classList.remove("hidden");
   } else { box.innerHTML='<div class="empty">Nama atlet tidak ditemukan.</div>'; box.classList.remove("hidden"); }
@@ -2322,7 +2604,7 @@ function handleWaktuAtletSuggest(){
   if(matches.length){
     var html="";
     matches.forEach(function(it){
-      html+='<div onclick="pilihAtletWaktuSuggest(\''+esc(it.panggilan).replace(/'/g,"\\'")+'\',\''+esc(it.lengkap).replace(/'/g,"\\'")+'\')" style="padding:8px;cursor:pointer;display:flex;gap:10px;align-items:center">'+avatarHtml(it.lengkap,"sm")+'<div><b style="font-size:13px">'+esc(it.lengkap)+'</b><br><span class="small muted">Panggilan: '+esc(it.panggilan)+'</span></div></div>';
+      html+='<div onclick="pilihAtletWaktuSuggest(\''+esc(it.panggilan).replace(/'/g,"\\'")+'\',\''+esc(it.lengkap).replace(/'/g,"\\'")+'\')" style="padding:8px;cursor:pointer;display:flex;gap:10px;align-items:center">'+avatarFotoHtml(it.foto,it.lengkap,"sm")+'<div><b style="font-size:13px">'+esc(it.lengkap)+'</b><br><span class="small muted">Panggilan: '+esc(it.panggilan)+'</span></div></div>';
     });
     box.innerHTML=html; box.classList.remove("hidden");
   } else { box.innerHTML='<div class="empty">Nama atlet tidak ditemukan.</div>'; box.classList.remove("hidden"); }
@@ -2340,6 +2622,8 @@ function prosesSimpanWaktu(){
   var rowIndex=$("wktRowIndex").value?parseInt($("wktRowIndex").value,10):null;
   if(!namaAtlet){ showAlert("Perhatian","Pilih atlet dulu (ketik nama, lalu pilih dari saran)."); return; }
   if(!tanggal||!waktu){ showAlert("Perhatian","Tanggal dan waktu wajib diisi."); return; }
+  var detikCek=parseKeDetikMurni(waktu);
+  if(detikCek<=0){ showAlert("Waktu tidak valid","Format waktu salah. Ketik angka saja, contoh: 10144 menjadi 1:01.44. Detik tidak boleh 60 atau lebih, dan titik ganda tidak diperbolehkan."); return; }
   var atlet=globalMasterAtletList.find(function(a){ return a.panggilan.toUpperCase()===namaAtlet.toUpperCase(); });
   var paket={rowIndex:rowIndex, namaAtlet:namaAtlet, nomorLomba:jarak+" "+gaya, tanggal:formatKeIndo(tanggal), waktu:waktu, status:status, kirimWa:$("chkKirimWa").checked, noHpWali:atlet?atlet.noHp||"":""};
   showLoading(true,"Menyimpan catatan waktu…");
