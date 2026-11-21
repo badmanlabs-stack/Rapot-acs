@@ -257,7 +257,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .hero:after{animation:heroDrift 7s linear infinite alternate}
 .hero h2,.hero p{animation:fadeUp .6s cubic-bezier(.22,.8,.3,1) both}
 .hero p{animation-delay:.08s}
-.stat{animation:popIn .5s cubic-bezier(.22,.8,.3,1) both}
+.stat{animation:popIn .5s cubic-bezier(.22,.8,.3,1) backwards;transition:transform .2s ease,box-shadow .2s ease}
+.stat:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
 .stat-grid .stat:nth-child(2){animation-delay:.06s}
 .stat-grid .stat:nth-child(3){animation-delay:.12s}
 .stat-grid .stat:nth-child(4){animation-delay:.18s}
@@ -269,7 +270,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .btn:active{transform:scale(.97)}
 .fchip,.tabs button{transition:background .2s ease,color .2s ease,border-color .2s ease,transform .15s ease}
 .fchip:active,.tabs button:active{transform:scale(.96)}
-.athlete-row{animation:fadeUp .4s cubic-bezier(.22,.8,.3,1) both;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.athlete-row{animation:fadeUp .4s cubic-bezier(.22,.8,.3,1) backwards;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
 .athlete-row:hover{transform:translateX(3px)}
 .cat{transition:border-color .2s ease,transform .2s ease}
 .cat:hover{transform:translateY(-2px)}
@@ -279,7 +280,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .pod:nth-child(3){animation-delay:.2s}
 .bar-fill{transform-origin:left center;animation:growBar .9s cubic-bezier(.22,.8,.3,1) both}
 .progress>i{transition:width .35s ease}
-.pb{animation:popIn .45s cubic-bezier(.22,.8,.3,1) both;transition:transform .2s ease,border-color .2s ease}
+.pb{animation:popIn .45s cubic-bezier(.22,.8,.3,1) backwards;transition:transform .2s ease,border-color .2s ease}
 .pb:hover{transform:translateY(-2px)}
 .modal-back{animation:fadeIn .25s ease both}
 .modal{animation:modalIn .35s cubic-bezier(.22,.8,.3,1) both}
@@ -296,6 +297,19 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .swatch:hover{transform:scale(1.15)}
 .input{transition:border-color .2s ease,box-shadow .2s ease}
 .avatar img{animation:fadeIn .4s ease both}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:cardIn .45s cubic-bezier(.22,.8,.3,1) backwards}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+.skl{border-radius:8px;background:linear-gradient(90deg,var(--surface-2) 25%,var(--line) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.3s linear infinite}
+.skl-row{height:54px;margin-bottom:10px}
+#panelPresensiManual:not([hidden]),#panelPresensiQr:not([hidden]){animation:fadeUp .3s ease backwards}
+.login-card{animation:modalIn .4s cubic-bezier(.22,.8,.3,1) backwards}
+.btn.primary:active{transform:scale(.95)}
+/* Grafik 3D */
+#chart3dWrap{position:relative;height:270px;border-radius:10px;overflow:hidden;cursor:grab;background:var(--surface-2)}
+#chart3dWrap:active{cursor:grabbing}
+#chart3dWrap canvas{display:block;width:100%!important;height:100%!important;touch-action:none}
+.chart3d-load{display:flex;flex-direction:column;gap:10px;padding:6px 0}
 .chart-tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;box-shadow:var(--shadow);white-space:nowrap;z-index:5;transform:translate(-50%,-115%)}
 .chart-box{position:relative}
 .qr-frame{border:2px dashed var(--line);border-radius:12px;overflow:hidden;background:#000}
@@ -925,7 +939,7 @@ function showLoading(status, teks, subTeks){ var l=$("globalLoader"); if(status)
 
 /* ---------- tema (mockup: data-theme + data-accent, localStorage) ---------- */
 var TEMA_KEY="ACS_TEMA_V13";
-function terapkanTema(){ var t={mode:"dark",accent:"teal"}; try{ var s=JSON.parse(localStorage.getItem(TEMA_KEY)||"null"); if(s){ t.mode=s.mode||"dark"; t.accent=s.accent||"teal"; } }catch(e){} document.documentElement.setAttribute("data-theme", t.mode); document.documentElement.setAttribute("data-accent", t.accent); var b=$("btnModeTema"); if(b) b.textContent=(t.mode==="dark"?"🌙 Gelap":"☀️ Terang"); document.querySelectorAll(".swatch").forEach(function(sw){ sw.classList.toggle("active", sw.getAttribute("data-accent")===t.accent); }); }
+function terapkanTema(){ var t={mode:"dark",accent:"teal"}; try{ var s=JSON.parse(localStorage.getItem(TEMA_KEY)||"null"); if(s){ t.mode=s.mode||"dark"; t.accent=s.accent||"teal"; } }catch(e){} document.documentElement.setAttribute("data-theme", t.mode); document.documentElement.setAttribute("data-accent", t.accent); var b=$("btnModeTema"); if(b) b.textContent=(t.mode==="dark"?"🌙 Gelap":"☀️ Terang"); document.querySelectorAll(".swatch").forEach(function(sw){ sw.classList.toggle("active", sw.getAttribute("data-accent")===t.accent); }); if(typeof __g3d!=="undefined" && __g3d && __g3dPoints.length){ renderGrafik(__g3dPoints.slice()); } }
 function simpanTema(mode, accent){ var cur={mode:document.documentElement.getAttribute("data-theme")||"dark", accent:document.documentElement.getAttribute("data-accent")||"teal"}; if(mode) cur.mode=mode; if(accent) cur.accent=accent; localStorage.setItem(TEMA_KEY, JSON.stringify(cur)); terapkanTema(); }
 function toggleModeTema(){ var m=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"; simpanTema(m,null); }
 function setAksen(a){ simpanTema(null,a); }
@@ -1074,6 +1088,7 @@ function prosesAuthentikasi(){
 }
 function prosesLogout(){
   hentikanQrKamera();
+  hentikanGrafik3D();
   showConfirm("Keluar?","Anda akan keluar dari ACS HUB di perangkat ini.","Ya, Keluar").then(function(ya){
     if(!ya) return;
     currentUserSession=null; localStorage.removeItem("ACS_SESSION");
@@ -1099,6 +1114,7 @@ function terapkanHakAksesUser(){
 var VIEW_IDS=["dashboard","atlet","rapot","hof","presensi","spp","lomba","input"];
 function navKe(nama){
   if(nama!=="presensi") hentikanQrKamera();
+  if(nama!=="rapot") hentikanGrafik3D();
   VIEW_IDS.forEach(function(v){ var el=$("view-"+v); if(el) el.hidden=(v!==nama); });
   document.querySelectorAll("[data-nav]").forEach(function(el){ el.classList.toggle("active", el.getAttribute("data-nav")===nama); });
   window.scrollTo({top:0});
@@ -1242,6 +1258,7 @@ function muatRingkasanBulan(){
     return;
   }
   sub.textContent="Rekap presensi bulan berjalan — 3 atlet paling disiplin.";
+  box.innerHTML='<div class="skl skl-row"></div><div class="skl skl-row"></div>';
   panggilBackend("getRekapPresensiAnalisis", [getToken(), bulanIniYM()]).then(function(res){
     if(tanganiResError(res)) return;
     var arr=Array.isArray(res)?res:[];
@@ -1255,6 +1272,7 @@ function muatRingkasanBulan(){
 }
 function renderProfilPresensiSppMini(){
   var box=$("ringkasanBulan");
+  box.innerHTML='<div class="skl skl-row"></div><div class="skl skl-row"></div>';
   panggilBackend("getAthleteData", [getToken(), currentUserSession.atletKey]).then(function(res){
     if(tanganiResError(res)) return;
     var p=res&&res.presensi?res.presensi:null, s=res&&res.spp?res.spp:null;
@@ -1379,6 +1397,7 @@ function kalkulasiGayaTerbaik(){
   return "Gaya terbaik: "+(GAYA_NAMA[best.gaya]||best.gaya)+" ("+best.nomor+" — "+globalBestTimes[best.nomor]+")";
 }
 function renderProfilePage(res){
+  hentikanGrafik3D();
   var p=res.profil||{};
   $("txtRapotJudul").textContent="Rapot — "+(p.namaLengkap||p.namaPanggilan||"");
   var foto=p.fotoBase64||"";
@@ -1419,7 +1438,7 @@ function renderProfilePage(res){
   h+='<select id="selectKategoriGrafik" class="input" style="width:130px" onchange="filterGrafikDanTabel()"><option value="all">Semua</option><option value="Latihan">Latihan</option><option value="Kejuaraan">Kejuaraan</option></select>';
   h+='<select id="selectLimitSesi" class="input" style="width:110px" onchange="filterGrafikDanTabel()"><option value="5">5 sesi</option><option value="10" selected>10 sesi</option><option value="20">20 sesi</option><option value="all">Semua</option></select>';
   h+='<span style="flex:1"></span><button class="btn primary hanya-pelatih" onclick="bukaPanelWaktu()">+ Input Waktu</button>';
-  h+='</div><div class="chart-box" id="chartBox"><p class="empty" id="emptyChartMsg">Pilih nomor lomba untuk melihat grafik.</p><div id="chartLegend" class="small" style="display:none;margin-bottom:6px"><span style="color:#00d4b2">●</span> Latihan &nbsp; <span style="color:#f59e0b">●</span> Kejuaraan &nbsp; <span class="muted">(waktu kecil di atas — makin cepat makin tinggi; arahkan kursor ke titik untuk detail)</span></div><div id="chartTip" class="chart-tip" hidden></div><svg id="myChart" width="100%" height="220" viewBox="0 0 600 220" preserveAspectRatio="none" style="display:none"></svg></div>';
+  h+='</div><div class="chart-box" id="chartBox"><p class="empty" id="emptyChartMsg">Pilih nomor lomba untuk melihat grafik.</p><div id="chartLegend" class="small" style="display:none;margin-bottom:6px"><span style="color:#00d4b2">●</span> Latihan &nbsp; <span style="color:#f59e0b">●</span> Kejuaraan &nbsp; <span class="muted">(waktu kecil di atas — makin cepat makin tinggi; seret untuk memutar · arahkan kursor ke titik untuk detail)</span></div><div id="chartTip" class="chart-tip" hidden></div><svg id="myChart" width="100%" height="220" viewBox="0 0 600 220" preserveAspectRatio="none" style="display:none"></svg><div id="chart3dWrap" hidden></div></div>';
   h+='<div class="tbl-wrap" style="margin-top:12px"><table class="tbl"><thead><tr><th>Tanggal</th><th>Nomor</th><th>Waktu</th><th>Status</th><th></th></tr></thead><tbody id="tabelRiwayatBody"></tbody></table></div>';
   h+='</div>';
   /* Presensi + SPP ringkas */
@@ -1480,6 +1499,370 @@ function pasangTooltipGrafik(){
     c.addEventListener("mouseleave", function(){ tip.hidden=true; });
   });
 }
+/* ============ GRAFIK 3D (Three.js) ============ */
+/* Grafik progres atlet sebagai adegan 3D ringan. Three.js dimuat malas
+   (lazy) hanya saat profil atlet dibuka; kalau WebGL/CDN gagal, grafik
+   SVG lama dipakai (fallback) sehingga halaman tidak pernah kosong. */
+var THREE_CDN_URL="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.149.0/three.min.js";
+var __threePromise=null;
+var __g3d=null;
+var __g3dPoints=[];
+var __g3dToken=0;
+var __g3dReduced=false;
+try{ __g3dReduced=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+
+function muatThreeJS(){
+  if(window.THREE) return Promise.resolve(window.THREE);
+  if(__threePromise) return __threePromise;
+  __threePromise=new Promise(function(resolve,reject){
+    var s=document.createElement("script");
+    s.src=THREE_CDN_URL; s.async=true;
+    var done=false;
+    var timer=setTimeout(function(){ if(!done){ done=true; reject(new Error("timeout muat Three.js")); } },10000);
+    s.onload=function(){ if(done) return; done=true; clearTimeout(timer); if(window.THREE) resolve(window.THREE); else reject(new Error("THREE tidak tersedia")); };
+    s.onerror=function(){ if(done) return; done=true; clearTimeout(timer); reject(new Error("gagal muat Three.js")); };
+    document.head.appendChild(s);
+  });
+  return __threePromise;
+}
+
+function warnaTemaGrafik(){
+  var cs=getComputedStyle(document.documentElement);
+  var gelap=document.documentElement.getAttribute("data-theme")==="dark";
+  function g(nama, def){ var v=""; try{ v=(cs.getPropertyValue(nama)||"").trim(); }catch(e){} return v||def; }
+  return {
+    garis: g("--line", gelap?"#22393f":"#d8e3e5"),
+    teks: g("--ink-3", gelap?"#6f8a93":"#7d939c"),
+    teksKuat: g("--ink", gelap?"#e9f3f4":"#0d2126"),
+    lat: "#00d4b2", kej: "#f59e0b", pb: "#f5a623"
+  };
+}
+
+function buatSpriteTeks(teks, opt){
+  opt=opt||{};
+  var px=opt.px||40;
+  var font=(opt.bold?"700 ":"")+px+"px 'Plus Jakarta Sans', system-ui, sans-serif";
+  var c=document.createElement("canvas");
+  var ctx=c.getContext("2d");
+  ctx.font=font;
+  var w=Math.ceil(ctx.measureText(teks).width)+24;
+  var h=px+24;
+  c.width=w; c.height=h;
+  var ctx2=c.getContext("2d");
+  ctx2.font=font; ctx2.fillStyle=opt.warna||"#ffffff"; ctx2.textAlign="center"; ctx2.textBaseline="middle";
+  ctx2.fillText(teks, w/2, h/2);
+  var tex=new THREE.CanvasTexture(c);
+  tex.anisotropy=4;
+  var mat=new THREE.SpriteMaterial({map:tex, transparent:true, depthWrite:false});
+  var sp=new THREE.Sprite(mat);
+  var skala=opt.skala||0.01;
+  sp.scale.set(w*skala, h*skala, 1);
+  return sp;
+}
+
+function easeOutCubic(p){ return 1-Math.pow(1-p,3); }
+function easeOutBack(p){ var c=1.70158, q=p-1; return 1+(c+1)*q*q*q+c*q*q; }
+
+function hentikanGrafik3D(){
+  if(!__g3d) return;
+  var g=__g3d; __g3d=null;
+  try{ if(g.raf) cancelAnimationFrame(g.raf); }catch(e){}
+  try{ if(g.ro) g.ro.disconnect(); }catch(e){}
+  try{ window.removeEventListener("resize", g.onResize); }catch(e){}
+  try{
+    if(g.wrap){
+      g.wrap.removeEventListener("pointermove", g.onMove);
+      g.wrap.removeEventListener("pointerdown", g.onDown);
+      g.wrap.removeEventListener("pointerup", g.onUp);
+      g.wrap.removeEventListener("pointerleave", g.onLeave);
+    }
+  }catch(e){}
+  try{
+    g.scene.traverse(function(o){
+      if(o.geometry) o.geometry.dispose();
+      if(o.material){ if(o.material.map) o.material.map.dispose(); o.material.dispose(); }
+    });
+  }catch(e){}
+  try{ g.renderer.dispose(); }catch(e){}
+  try{ var c=g.renderer.domElement; if(c&&c.parentNode) c.parentNode.removeChild(c); }catch(e){}
+}
+
+function bangunGrafik3D(points){
+  hentikanGrafik3D();
+  var wrap=$("chart3dWrap"); if(!wrap) return false;
+  var THREE=window.THREE; if(!THREE) return false;
+  var W=warnaTemaGrafik();
+  var n=points.length;
+  var vals=points.map(function(p){ return p.detik; });
+  var min=Math.min.apply(null,vals), max=Math.max.apply(null,vals);
+  if(min===max){ min-=1; max+=1; }
+  var X0=-5, X1=5, Y0=0.15, Y1=4.1, TINGGI=270;
+  function X(i){ return n===1?0:(X0+i*(X1-X0)/(n-1)); }
+  function Y(v){ return Y0+((max-v)/(max-min))*(Y1-Y0); }
+  var renderer;
+  try{ renderer=new THREE.WebGLRenderer({antialias:true, alpha:true}); }
+  catch(e){ return false; }
+  try{ renderer.outputEncoding=THREE.sRGBEncoding; }catch(e){}
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+  var cw=wrap.clientWidth||600;
+  renderer.setSize(cw, TINGGI);
+  renderer.setClearColor(0x000000, 0);
+  wrap.innerHTML="";
+  wrap.appendChild(renderer.domElement);
+  var scene=new THREE.Scene();
+  var camera=new THREE.PerspectiveCamera(42, cw/TINGGI, 0.1, 100);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  var dirLight=new THREE.DirectionalLight(0xffffff, 0.75);
+  dirLight.position.set(4, 8, 6);
+  scene.add(dirLight);
+  /* Lantai grid: hanya selebar area data (bukan lapangan kosong) */
+  var gridMat=new THREE.LineBasicMaterial({color:W.garis, transparent:true, opacity:0.4});
+  var gridPts=[];
+  var gx, gz;
+  for(gx=-5.5; gx<=5.51; gx+=1){ gridPts.push(new THREE.Vector3(gx,0,-2), new THREE.Vector3(gx,0,2)); }
+  for(gz=-2; gz<=2.01; gz+=0.5){ gridPts.push(new THREE.Vector3(-5.5,0,gz), new THREE.Vector3(5.5,0,gz)); }
+  var gridGeo=new THREE.BufferGeometry().setFromPoints(gridPts);
+  scene.add(new THREE.LineSegments(gridGeo, gridMat));
+  /* Sumbu Y: 4 label waktu + garis bantu */
+  var t;
+  for(t=0;t<4;t++){
+    var val=max-t*(max-min)/3, y=Y(val);
+    var sp=buatSpriteTeks(formatDetikKeMenit(val), {warna:W.teks, px:36, skala:0.009});
+    sp.position.set(X0-1.05, y, 0);
+    scene.add(sp);
+    var lg=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(X0-0.4,y,0), new THREE.Vector3(X1+0.4,y,0)]);
+    scene.add(new THREE.Line(lg, new THREE.LineBasicMaterial({color:W.garis, transparent:true, opacity:0.45})));
+  }
+  /* Sumbu X: tanggal awal, tengah, akhir */
+  var idxTgl=[];
+  [0, Math.floor((n-1)/2), n-1].forEach(function(ix){ if(idxTgl.indexOf(ix)<0) idxTgl.push(ix); });
+  idxTgl.forEach(function(ix){
+    var sp2=buatSpriteTeks(points[ix].tanggal||"", {warna:W.teks, px:34, skala:0.009});
+    sp2.position.set(X(ix), -0.62, 0);
+    scene.add(sp2);
+  });
+  /* Dua seri: garis tabung + bola + label nilai */
+  var matLat=new THREE.MeshLambertMaterial({color:0x00d4b2});
+  var matKej=new THREE.MeshLambertMaterial({color:0xf59e0b});
+  var geoBola=new THREE.SphereGeometry(0.19, 20, 16);
+  var anim=[];
+  var bolaMeshes=[];
+  var pbIdx=0;
+  points.forEach(function(p,i){ if(p.detik<points[pbIdx].detik) pbIdx=i; });
+  var labelSemua=n<=25;
+  function bangunSeri(list, z, mat){
+    var vek=list.map(function(p){
+      return {p:p, v:new THREE.Vector3(X(points.indexOf(p)), Y(p.detik), z)};
+    });
+    var i;
+    for(i=0;i<vek.length-1;i++){
+      var a=vek[i].v, b=vek[i+1].v;
+      var dirv=new THREE.Vector3().subVectors(b,a);
+      var len=dirv.length();
+      if(len<0.001) continue;
+      var geo=new THREE.CylinderGeometry(0.065, 0.065, len, 10);
+      var mesh=new THREE.Mesh(geo, mat);
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirv.normalize());
+      mesh.scale.set(1, 0.001, 1);
+      scene.add(mesh);
+      anim.push({obj:mesh, t0:0.15+i*0.12, kind:"garis"});
+    }
+    vek.forEach(function(it, i2){
+      var bola=new THREE.Mesh(geoBola, mat);
+      bola.position.copy(it.v);
+      bola.scale.set(0.001, 0.001, 0.001);
+      bola.userData={p:it.p, siap:false};
+      scene.add(bola);
+      bolaMeshes.push(bola);
+      anim.push({obj:bola, t0:0.25+i2*0.1, kind:"bola"});
+      var ixGlobal=points.indexOf(it.p);
+      if(labelSemua || ixGlobal===0 || ixGlobal===n-1 || ixGlobal===pbIdx){
+        var lbl=buatSpriteTeks(formatDetikKeMenit(it.p.detik), {warna:W.teksKuat, px:40, skala:0.01});
+        lbl.position.set(it.v.x, it.v.y+0.52, it.v.z);
+        lbl.material.opacity=0;
+        scene.add(lbl);
+        anim.push({obj:lbl, t0:0.35+i2*0.1, kind:"label"});
+      }
+    });
+  }
+  var lat=points.filter(function(p){ return p.status==="Latihan"; });
+  var kej=points.filter(function(p){ return p.status!=="Latihan"; });
+  bangunSeri(lat, -0.45, matLat);
+  bangunSeri(kej, 0.45, matKej);
+  /* Halo + label PB (titik tercepat) */
+  var pbP=points[pbIdx];
+  var pbV=new THREE.Vector3(X(pbIdx), Y(pbP.detik), pbP.status==="Latihan"?-0.45:0.45);
+  var halo=new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 16), new THREE.MeshBasicMaterial({color:0xf5a623, transparent:true, opacity:0.3, depthWrite:false}));
+  halo.position.copy(pbV);
+  scene.add(halo);
+  var pbLbl=buatSpriteTeks("★ PB", {warna:"#f5a623", px:46, skala:0.012, bold:true});
+  pbLbl.position.set(pbV.x, pbV.y+0.98, pbV.z);
+  scene.add(pbLbl);
+  /* Kamera + interaksi */
+  var target=new THREE.Vector3(0, 1.9, 0);
+  var rotY=0, rotYTujuan=0, pointerX=0, pointerY=0;
+  var dragging=false, dragX0=0, rotY0=0, moved=0;
+  var ray=new THREE.Raycaster();
+  var mouseNDC=new THREE.Vector2();
+  var hovered=null;
+  function aturKamera(ts){
+    var sway=__g3dReduced?0:Math.sin(ts*0.00045)*0.12;
+    var a=rotY+sway+pointerX*0.22;
+    var r=11.8;
+    camera.position.set(Math.sin(a)*r, 3.3+pointerY*0.6+(__g3dReduced?0:Math.sin(ts*0.0003)*0.12), Math.cos(a)*r);
+    camera.lookAt(target);
+  }
+  function raycastDariEvent(ev){
+    var rect=renderer.domElement.getBoundingClientRect();
+    mouseNDC.x=((ev.clientX-rect.left)/rect.width)*2-1;
+    mouseNDC.y=-((ev.clientY-rect.top)/rect.height)*2+1;
+    ray.setFromCamera(mouseNDC, camera);
+    var hits=ray.intersectObjects(bolaMeshes, false);
+    return hits.length?hits[0].object:null;
+  }
+  function tampilkanTip(bola){
+    var tip=$("chartTip"), box=$("chartBox");
+    if(!tip||!box||!bola) return;
+    var p=bola.userData.p;
+    tip.textContent=(p.tanggal||"")+" · "+formatDetikKeMenit(p.detik)+" ("+(p.status||"")+")";
+    var v=bola.position.clone().project(camera);
+    var rect=wrap.getBoundingClientRect(), br=box.getBoundingClientRect();
+    tip.style.left=((v.x*0.5+0.5)*rect.width+(rect.left-br.left))+"px";
+    tip.style.top=((-v.y*0.5+0.5)*rect.height+(rect.top-br.top))+"px";
+    tip.hidden=false;
+  }
+  function sembunyikanTip(){ var tip=$("chartTip"); if(tip) tip.hidden=true; }
+  function onMove(ev){
+    var rect=wrap.getBoundingClientRect();
+    pointerX=((ev.clientX-rect.left)/rect.width)*2-1;
+    pointerY=-((ev.clientY-rect.top)/rect.height)*2+1;
+    if(dragging){
+      moved=Math.max(moved, Math.abs(ev.clientX-dragX0));
+      rotYTujuan=Math.max(-0.7, Math.min(0.7, rotY0+(ev.clientX-dragX0)*0.005));
+      return;
+    }
+    if(ev.pointerType==="mouse"){
+      var b=raycastDariEvent(ev);
+      if(hovered && hovered!==b && hovered.userData.siap){ hovered.scale.set(1,1,1); }
+      if(b){
+        if(b.userData.siap) b.scale.set(1.35,1.35,1.35);
+        tampilkanTip(b);
+      } else { sembunyikanTip(); }
+      hovered=b;
+    }
+  }
+  function onDown(ev){
+    dragging=true; moved=0; dragX0=ev.clientX; rotY0=rotYTujuan;
+    try{ if(wrap.setPointerCapture) wrap.setPointerCapture(ev.pointerId); }catch(e){}
+  }
+  function onUp(ev){
+    dragging=false;
+    if(moved<6){
+      var b=raycastDariEvent(ev);
+      if(b) tampilkanTip(b); else sembunyikanTip();
+    } else { sembunyikanTip(); }
+  }
+  function onLeave(){
+    pointerX=0; pointerY=0;
+    sembunyikanTip();
+    if(hovered && hovered.userData.siap){ hovered.scale.set(1,1,1); hovered=null; }
+  }
+  function onResize(){
+    var w=wrap.clientWidth||600;
+    camera.aspect=w/TINGGI;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, TINGGI);
+  }
+  var ro=null;
+  if(window.ResizeObserver){ ro=new ResizeObserver(onResize); ro.observe(wrap); }
+  window.addEventListener("resize", onResize);
+  __g3d={renderer:renderer, scene:scene, camera:camera, raf:0, ro:ro, wrap:wrap, onResize:onResize, onMove:onMove, onDown:onDown, onUp:onUp, onLeave:onLeave};
+  wrap.addEventListener("pointermove", onMove);
+  wrap.addEventListener("pointerdown", onDown);
+  wrap.addEventListener("pointerup", onUp);
+  wrap.addEventListener("pointerleave", onLeave);
+  if(__g3dReduced){
+    anim.forEach(function(an){
+      if(an.kind==="garis") an.obj.scale.y=1;
+      else if(an.kind==="bola"){ an.obj.scale.set(1,1,1); an.obj.userData.siap=true; }
+      else if(an.kind==="label") an.obj.material.opacity=1;
+      an.selesai=true;
+    });
+  }
+  var mulai=null;
+  function loop(ts){
+    if(!__g3d) return;
+    __g3d.raf=requestAnimationFrame(loop);
+    if(document.hidden) return;
+    if(mulai===null) mulai=ts;
+    var t=(ts-mulai)/1000;
+    var i, an, p;
+    for(i=0;i<anim.length;i++){
+      an=anim[i];
+      if(an.selesai) continue;
+      p=(t-an.t0)/0.45;
+      if(p<=0) continue;
+      if(p>=1){ p=1; an.selesai=true; }
+      if(an.kind==="garis"){ an.obj.scale.y=Math.max(0.001, easeOutCubic(p)); }
+      else if(an.kind==="bola"){
+        var s=easeOutBack(p);
+        an.obj.scale.set(s,s,s);
+        if(p>=1) an.obj.userData.siap=true;
+      }
+      else if(an.kind==="label"){ an.obj.material.opacity=p; }
+    }
+    rotY+=(rotYTujuan-rotY)*0.08;
+    if(!__g3dReduced){
+      var pul=1+0.18*Math.sin(ts*0.004);
+      halo.scale.set(pul,pul,pul);
+      halo.material.opacity=0.22+0.12*Math.sin(ts*0.004);
+    }
+    aturKamera(ts);
+    renderer.render(scene, camera);
+  }
+  aturKamera(0);
+  __g3d.raf=requestAnimationFrame(loop);
+  return true;
+}
+
+function renderGrafik(points){
+  var svg=$("myChart"), wrap=$("chart3dWrap");
+  var leg=$("chartLegend"); if(leg) leg.style.display=points.length?"block":"none";
+  if(!points.length){
+    hentikanGrafik3D();
+    if(wrap) wrap.hidden=true;
+    renderChartSvg([]);
+    return;
+  }
+  __g3dPoints=points.slice();
+  var token=++__g3dToken;
+  $("emptyChartMsg").style.display="none";
+  if(!window.WebGLRenderingContext){
+    if(wrap) wrap.hidden=true;
+    renderChartSvg(points);
+    return;
+  }
+  if(svg) svg.style.display="none";
+  if(wrap){
+    wrap.hidden=false;
+    wrap.innerHTML='<div class="chart3d-load"><div class="skl" style="height:200px"></div><p class="empty" style="padding:0">Memuat grafik 3D…</p></div>';
+  }
+  muatThreeJS().then(function(){
+    if(token!==__g3dToken) return;
+    if(!$("chart3dWrap") || $("chart3dWrap").hidden) return;
+    if(!bangunGrafik3D(points)){
+      if(wrap) wrap.hidden=true;
+      renderChartSvg(points);
+    }
+  }).catch(function(){
+    if(token!==__g3dToken) return;
+    if(wrap) wrap.hidden=true;
+    renderChartSvg(points);
+  });
+}
+/* ============ /GRAFIK 3D ============ */
+
 function filterGrafikDanTabel(){
   var jarak=$("selectJarak")?$("selectJarak").value:"50m";
   var gaya=$("selectGaya")?$("selectGaya").value:"FR";
@@ -1511,7 +1894,7 @@ function filterGrafikDanTabel(){
     tb.innerHTML=h;
   }
   var pts=tampil.slice().reverse().map(function(r){ return {tanggal:r.tanggal, detik:parseKeDetikMurni(r.waktu||""), status:r.status||"Latihan"}; }).filter(function(p){ return p.detik>0; });
-  renderChartSvg(pts);
+  renderGrafik(pts);
 }
 function editWaktuHistori(rowIndex, nomorLomba, tanggal, waktu, status){
   var m=String(nomorLomba||"").match(/(\d+m)\s*(\w+)/);
