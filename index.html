@@ -306,7 +306,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .login-card{animation:modalIn .4s cubic-bezier(.22,.8,.3,1) backwards}
 .btn.primary:active{transform:scale(.95)}
 /* Grafik 3D */
-#chart3dWrap{position:relative;height:270px;border-radius:10px;overflow:hidden;cursor:grab;background:var(--surface-2)}
+#chart3dWrap{position:relative;height:460px;border-radius:10px;overflow:hidden;cursor:grab;background:var(--surface-2)}
 #chart3dWrap:active{cursor:grabbing}
 #chart3dWrap canvas{display:block;width:100%!important;height:100%!important;touch-action:none}
 .chart3d-load{display:flex;flex-direction:column;gap:10px;padding:6px 0}
@@ -356,6 +356,7 @@ input[type=file]{font-size:13px}
   .tile-grid{grid-template-columns:repeat(2,1fr)}
   .pb-grid{grid-template-columns:repeat(2,1fr)}
   .stat-grid{grid-template-columns:repeat(2,1fr)}
+  #chart3dWrap{height:340px}
 }
 </style>
 </head>
@@ -1596,9 +1597,22 @@ function bangunGrafik3D(points){
   var vals=points.map(function(p){ return p.detik; });
   var min=Math.min.apply(null,vals), max=Math.max.apply(null,vals);
   if(min===max){ min-=1; max+=1; }
-  var X0=-5, X1=5, Y0=0.15, Y1=4.1, TINGGI=270;
+  var X0=-5, X1=5, Y0=0.15, Y1=4.1;
+  var TINGGI=wrap.clientHeight||460;
   function X(i){ return n===1?0:(X0+i*(X1-X0)/(n-1)); }
   function Y(v){ return Y0+((max-v)/(max-min))*(Y1-Y0); }
+  /* Bingkai kamera: batas data (termasuk label sumbu + label nilai + "★ PB")
+     mengisi ~85% viewport — dihitung dari bounding box, bukan jarak tetap. */
+  var B={x0:-7.6, x1:5.9, y0:-0.9, y1:5.55};
+  var PUSX=(B.x0+B.x1)/2, PUSY=(B.y0+B.y1)/2;
+  var SPANX=B.x1-B.x0, SPANY=B.y1-B.y0, ISI=0.85;
+  var TANS=Math.tan(21*Math.PI/180);
+  function jarakKamera(){
+    var asp=(wrap.clientWidth||600)/(wrap.clientHeight||TINGGI);
+    var dH=(SPANY/2/ISI)/TANS;
+    var dW=(SPANX/2/ISI)/(TANS*asp);
+    return Math.max(dH, dW);
+  }
   var renderer;
   try{ renderer=new THREE.WebGLRenderer({antialias:true, alpha:true}); }
   catch(e){ return false; }
@@ -1619,8 +1633,8 @@ function bangunGrafik3D(points){
   var gridMat=new THREE.LineBasicMaterial({color:W.garis, transparent:true, opacity:0.4});
   var gridPts=[];
   var gx, gz;
-  for(gx=-5.5; gx<=5.51; gx+=1){ gridPts.push(new THREE.Vector3(gx,0,-2), new THREE.Vector3(gx,0,2)); }
-  for(gz=-2; gz<=2.01; gz+=0.5){ gridPts.push(new THREE.Vector3(-5.5,0,gz), new THREE.Vector3(5.5,0,gz)); }
+  for(gx=-6.5; gx<=6.51; gx+=1){ gridPts.push(new THREE.Vector3(gx,0,-2), new THREE.Vector3(gx,0,2)); }
+  for(gz=-2; gz<=2.01; gz+=0.5){ gridPts.push(new THREE.Vector3(-6.5,0,gz), new THREE.Vector3(6.5,0,gz)); }
   var gridGeo=new THREE.BufferGeometry().setFromPoints(gridPts);
   scene.add(new THREE.LineSegments(gridGeo, gridMat));
   /* Sumbu Y: 4 label waktu + garis bantu */
@@ -1628,9 +1642,9 @@ function bangunGrafik3D(points){
   for(t=0;t<4;t++){
     var val=max-t*(max-min)/3, y=Y(val);
     var sp=buatSpriteTeks(formatDetikKeMenit(val), {warna:W.teks, px:36, skala:0.009});
-    sp.position.set(X0-1.05, y, 0);
+    sp.position.set(X0-1.85, y, 0);
     scene.add(sp);
-    var lg=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(X0-0.4,y,0), new THREE.Vector3(X1+0.4,y,0)]);
+    var lg=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(X0-1.2,y,0), new THREE.Vector3(X1+0.4,y,0)]);
     scene.add(new THREE.Line(lg, new THREE.LineBasicMaterial({color:W.garis, transparent:true, opacity:0.45})));
   }
   /* Sumbu X: tanggal awal, tengah, akhir */
@@ -1678,8 +1692,8 @@ function bangunGrafik3D(points){
       anim.push({obj:bola, t0:0.25+i2*0.1, kind:"bola"});
       var ixGlobal=points.indexOf(it.p);
       if(labelSemua || ixGlobal===0 || ixGlobal===n-1 || ixGlobal===pbIdx){
-        var lbl=buatSpriteTeks(formatDetikKeMenit(it.p.detik), {warna:W.teksKuat, px:40, skala:0.01});
-        lbl.position.set(it.v.x, it.v.y+0.52, it.v.z);
+        var lbl=buatSpriteTeks(formatDetikKeMenit(it.p.detik), {warna:W.teksKuat, px:36, skala:0.0095});
+        lbl.position.set(it.v.x, it.v.y+0.62, it.v.z);
         lbl.material.opacity=0;
         scene.add(lbl);
         anim.push({obj:lbl, t0:0.35+i2*0.1, kind:"label"});
@@ -1697,10 +1711,10 @@ function bangunGrafik3D(points){
   halo.position.copy(pbV);
   scene.add(halo);
   var pbLbl=buatSpriteTeks("★ PB", {warna:"#f5a623", px:46, skala:0.012, bold:true});
-  pbLbl.position.set(pbV.x, pbV.y+0.98, pbV.z);
+  pbLbl.position.set(pbV.x, pbV.y+1.15, pbV.z);
   scene.add(pbLbl);
   /* Kamera + interaksi */
-  var target=new THREE.Vector3(0, 1.9, 0);
+  var target=new THREE.Vector3(PUSX, PUSY, 0);
   var rotY=0, rotYTujuan=0, pointerX=0, pointerY=0;
   var dragging=false, dragX0=0, rotY0=0, moved=0;
   var ray=new THREE.Raycaster();
@@ -1709,8 +1723,8 @@ function bangunGrafik3D(points){
   function aturKamera(ts){
     var sway=__g3dReduced?0:Math.sin(ts*0.00045)*0.12;
     var a=rotY+sway+pointerX*0.22;
-    var r=11.8;
-    camera.position.set(Math.sin(a)*r, 3.3+pointerY*0.6+(__g3dReduced?0:Math.sin(ts*0.0003)*0.12), Math.cos(a)*r);
+    var r=jarakKamera();
+    camera.position.set(Math.sin(a)*r, PUSY+r*0.12+pointerY*0.6+(__g3dReduced?0:Math.sin(ts*0.0003)*0.12), Math.cos(a)*r);
     camera.lookAt(target);
   }
   function raycastDariEvent(ev){
@@ -1770,9 +1784,10 @@ function bangunGrafik3D(points){
   }
   function onResize(){
     var w=wrap.clientWidth||600;
-    camera.aspect=w/TINGGI;
+    var h=wrap.clientHeight||TINGGI;
+    camera.aspect=w/h;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, TINGGI);
+    renderer.setSize(w, h);
   }
   var ro=null;
   if(window.ResizeObserver){ ro=new ResizeObserver(onResize); ro.observe(wrap); }
@@ -1846,7 +1861,7 @@ function renderGrafik(points){
   if(svg) svg.style.display="none";
   if(wrap){
     wrap.hidden=false;
-    wrap.innerHTML='<div class="chart3d-load"><div class="skl" style="height:200px"></div><p class="empty" style="padding:0">Memuat grafik 3D…</p></div>';
+    wrap.innerHTML='<div class="chart3d-load"><div class="skl" style="height:400px"></div><p class="empty" style="padding:0">Memuat grafik 3D…</p></div>';
   }
   muatThreeJS().then(function(){
     if(token!==__g3dToken) return;
