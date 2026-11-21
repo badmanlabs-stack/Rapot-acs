@@ -537,6 +537,70 @@ function ubahPassword(token, passwordLama, passwordBaru) {
   });
 }
 
+// Reset password wali (lupa password) — HANYA pelatih.
+// Password lama langsung tidak berlaku. Password baru dibuat acak
+// (8 karakter, seperti saat registrasi), hanya hash-nya yang
+// disimpan; password aslinya HANYA tampil sekali di hasil fungsi
+// ini dan tidak disimpan di mana pun. Wali wajib menggantinya
+// saat login pertama (HARUS_GANTI_PASSWORD = "YA").
+// Bila atlet belum punya baris di USER_ACCOUNT (atlet lama),
+// baris dibuatkan dulu setelah dipastikan atletnya ada di
+// PROFIL_ATLET.
+function resetPasswordWali(token, usernameAtlet) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  var kunci = normalisasiNama(usernameAtlet);
+  if (!kunci) return { error: "Nama panggilan atlet wajib diisi." };
+  return denganLock(function() {
+    try {
+      var passwordBaru = buatPasswordAcak();
+      var hashBaru = hitungHashSha256(passwordBaru);
+      var sheetAkun = getUserAccountSheet();
+      var data = sheetAkun.getDataRange().getDisplayValues();
+      var headers = data[0] || [];
+      var idxUser = getColumnIndex(headers, ["USERNAME"]);
+      var idxHash = getColumnIndex(headers, ["PASSWORD_HASH"]);
+      var idxRole = getColumnIndex(headers, ["ROLE"]);
+      var idxAtlet = getColumnIndex(headers, ["ATLET_KEY"]);
+      var idxGanti = getColumnIndex(headers, ["HARUS_GANTI_PASSWORD"]);
+      if (idxUser === -1) idxUser = 0;
+      if (idxHash === -1) idxHash = 1;
+      if (idxRole === -1) idxRole = 2;
+      if (idxAtlet === -1) idxAtlet = 3;
+      if (idxGanti === -1) idxGanti = 4;
+      for (var i = 1; i < data.length; i++) {
+        if (normalisasiNama(data[i][idxUser]) === kunci) {
+          sheetAkun.getRange(i + 1, idxHash + 1).setValue(hashBaru);
+          sheetAkun.getRange(i + 1, idxGanti + 1).setValue("YA");
+          return { success: "Password wali untuk " + kunci + " berhasil direset.", username: kunci, passwordBaru: passwordBaru };
+        }
+      }
+      // Belum punya akun: pastikan atletnya ada di PROFIL_ATLET,
+      // lalu buatkan baris akun wali baru.
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var sheetProfil = ss.getSheetByName("PROFIL_ATLET") || ss.getSheetByName("PROFIL");
+      if (!sheetProfil) return { error: "Atlet tidak ditemukan di data PROFIL_ATLET" };
+      var dataProfil = sheetProfil.getDataRange().getDisplayValues();
+      if (dataProfil.length < 2) return { error: "Atlet tidak ditemukan di data PROFIL_ATLET" };
+      var idxPanggilan = getColumnIndex(dataProfil[0], ["NAMA_PANGGILAN", "PANGGILAN", "KEY"]);
+      if (idxPanggilan === -1) idxPanggilan = 0;
+      var ditemukan = false;
+      for (var p = 1; p < dataProfil.length; p++) {
+        if (normalisasiNama(dataProfil[p][idxPanggilan]) === kunci) { ditemukan = true; break; }
+      }
+      if (!ditemukan) return { error: "Atlet tidak ditemukan di data PROFIL_ATLET" };
+      sheetAkun.appendRow([kunci, hashBaru, "wali", kunci, "YA"]);
+      return { success: "Akun wali untuk " + kunci + " berhasil dibuat (atlet lama belum punya akun).", username: kunci, passwordBaru: passwordBaru };
+    } catch (err) {
+      return { error: err.toString() };
+    }
+  });
+}
+
 // ====================================================
 // MODUL ATLET & PROFIL
 // ====================================================
@@ -2658,8 +2722,9 @@ function cekKesiapanV12() {
 // Frontend di GitHub Pages memanggil backend lewat HTTP POST ke /exec
 // dengan body JSON {fn, args} dan menerima {ok:true,result} atau
 // {ok:false,error}. Hanya fungsi yang ada di FUNGSI_DIIZINKAN yang boleh
-// dipanggil — yaitu tepat 36 fungsi yang dipakai frontend v13 (13 lewat
-// panggilServer + 24 lewat panggilan langsung, 1 irisan: getAthleteData).
+// dipanggil — yaitu tepat 39 fungsi yang dipakai frontend v13 (13 lewat
+// panggilServer + 24 lewat panggilan langsung, 1 irisan: getAthleteData;
+// ditambah tambahEventLomba, getFotoAtletMap, dan resetPasswordWali).
 // Helper internal (validasiToken, bolehAksesAtlet, dsb.) TIDAK diekspos.
 // doGet dan semua fungsi lama di atas TIDAK diubah.
 // ====================================================
@@ -2691,6 +2756,7 @@ var FUNGSI_DIIZINKAN = {
   kirimNotifikasiWaTagihanFonnte: kirimNotifikasiWaTagihanFonnte,
   prosesLogin: prosesLogin,
   prosesVerifikasiSppCoach: prosesVerifikasiSppCoach,
+  resetPasswordWali: resetPasswordWali,
   simpanAnalisisBukuAcara: simpanAnalisisBukuAcara,
   simpanCatatanKarakter: simpanCatatanKarakter,
   simpanPendaftaranLomba: simpanPendaftaranLomba,

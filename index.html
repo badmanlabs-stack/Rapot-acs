@@ -357,7 +357,7 @@ input[type=file]{font-size:13px}
     <div class="field"><label class="lbl" for="loginUsername">Username</label><input id="loginUsername" class="input" autocomplete="username" placeholder="cth: CoachACS atau nama panggilan"></div>
     <div class="field"><label class="lbl" for="loginPassword">Password</label><input id="loginPassword" type="password" class="input" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')prosesAuthentikasi()"></div>
     <button class="btn primary" style="width:100%;padding:12px" onclick="prosesAuthentikasi()">Masuk</button>
-    <p class="small muted" style="margin-top:14px;text-align:center">Lupa password? Hubungi pelatih ACS.</p>
+    <p class="small muted" style="margin-top:14px;text-align:center">Lupa password? Minta reset ke pelatih.</p>
   </div>
 </div>
 
@@ -1394,7 +1394,7 @@ function renderProfilePage(res){
   h+='<span class="pill">Lahir: '+esc(p.tglLahir||"-")+'</span>';
   if(p.noHp) h+='<span class="pill">HP Wali: '+esc(p.noHp)+'</span>';
   h+='</div><p class="small" style="margin-top:8px;color:var(--accent);font-weight:700">'+esc(kalkulasiGayaTerbaik())+'</p></div>';
-  h+='<div style="display:flex;gap:8px;flex-wrap:wrap" class="hanya-pelatih"><button class="btn" onclick="editAtletIni()">✏️ Edit Profil</button><button class="btn" onclick="bukaModalKarakter()">📝 Input Karakter</button></div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap" class="hanya-pelatih"><button class="btn" onclick="editAtletIni()">✏️ Edit Profil</button><button class="btn" onclick="bukaModalKarakter()">📝 Input Karakter</button><button class="btn" onclick="resetPasswordWaliIni()">🔑 Reset Password Wali</button></div>';
   h+='</div></div>';
   /* Karakter */
   var k=res.karakter||{disiplin:80,fokus:80,dayaJuang:80,catatanPelatih:"Belum ada catatan."};
@@ -1655,6 +1655,21 @@ function bukaPanelAdmin(){
   $("admKey").disabled=false; $("admKey").value=""; $("admNama").value=""; $("admNisn").value=""; $("admNik").value="";
   $("admTgl").value=""; $("admFoto").value=""; $("admNoHp").value=""; $("txtFotoLama").textContent="";
   bukaModal("adminModal");
+}
+/* Reset password wali (lupa password) — pelatih saja. Password baru
+   tampil SEKALI di alert; wali wajib menggantinya saat login pertama. */
+function resetPasswordWaliIni(){
+  if(!currentLoadedProfil || !currentLoadedProfil.namaPanggilan) return;
+  var panggilan=currentLoadedProfil.namaPanggilan;
+  var nama=currentLoadedProfil.namaLengkap||panggilan;
+  showConfirm("Reset Password Wali","Reset password wali untuk "+nama+" ("+panggilan+")? Password lama langsung tidak berlaku lagi.","Ya, Reset").then(function(ya){
+    if(!ya) return;
+    panggilServer("resetPasswordWali",[getToken(), panggilan],{ pesan:"Mereset password wali…", autoRetry:false, onSukses:function(res){
+      showLoading(false);
+      if(tanganiResError(res)) return;
+      showAlert("Password Wali Direset","Username wali: "+res.username+"\nPassword baru: "+res.passwordBaru+"\n\nSIMPAN dan berikan password ini ke wali — password hanya tampil sekali. Wali wajib menggantinya saat login pertama.");
+    }});
+  });
 }
 function editAtletIni(){
   if(!currentLoadedProfil) return;
