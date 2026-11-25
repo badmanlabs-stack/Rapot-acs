@@ -574,38 +574,6 @@ input[type=file]{font-size:13px}
           <div id="sppKonfirmasiList" style="margin-top:12px"></div>
         </div>
       </div>
-      <div class="card hanya-pelatih" id="cardPengingatSpp">
-        <h3>Pengingat SPP Otomatis</h3>
-        <div class="sub">WA pengingat hanya ke wali yang <b>belum kirim bukti TF</b> atau buktinya <b>ditolak admin</b>. Yang sudah LUNAS atau masih PENDING VERIFIKASI tidak dikirimi.</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-          <div><label class="lbl">Bulan</label><input type="month" id="sppIngatBulan" class="input" style="width:170px"></div>
-          <button class="btn primary" onclick="muatDaftarPengingatSpp()">Lihat Daftar</button>
-          <button class="btn primary" onclick="kirimPengingatSppUI()">Kirim Pengingat</button>
-          <label class="small" style="display:flex;gap:4px;align-items:center"><input type="checkbox" id="sppIngatPaksa"> Kirim ulang walau sudah diingatkan bulan ini</label>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px">
-          <div><label class="lbl">WA Uji (nomor HP)</label><input id="sppIngatUjiNomor" class="input" style="width:170px" placeholder="cth: 0896xxxxxxx" inputmode="tel"></div>
-          <button class="btn" onclick="kirimPengingatSppUjiUI()">Kirim WA Uji</button>
-          <span class="small muted">Satu pesan uji ke nomor di atas (bukan ke wali). Dicatat di log sebagai “UJI”.</span>
-        </div>
-        <div id="sppIngatDaftar" style="margin-top:12px"></div>
-        <div style="margin-top:16px">
-          <h3 style="font-size:14px">Pengaturan Jadwal &amp; Nominal</h3>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-            <div><label class="lbl">Tanggal kirim (pisah koma)</label><input id="sppIngatTanggal" class="input" style="width:140px" placeholder="cth: 5, 20"></div>
-            <div><label class="lbl">Jam kirim (0–23)</label><input type="number" id="sppIngatJam" class="input" style="width:90px" min="0" max="23"></div>
-            <div><label class="lbl">Nominal SPP (Rp)</label><input type="number" id="sppIngatNominal" class="input" style="width:150px" min="1" step="1000"></div>
-            <button class="btn primary" onclick="simpanPengaturanPengingatSppUI()">Simpan Pengaturan</button>
-          </div>
-          <p class="small muted" style="margin-top:6px">Tanggal 1–28, maks 4 tanggal (maks 28 supaya jalan tiap bulan termasuk Februari). Menyimpan akan memasang ulang jadwal otomatis bila sudah aktif.</p>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px">
-          <button class="btn" onclick="pasangJadwalPengingatSpp()">Pasang Jadwal Otomatis</button>
-          <button class="btn sm ghost" onclick="hapusJadwalPengingatSpp()">Hapus Jadwal</button>
-          <span class="small muted" id="sppIngatTriggerStatus">Memuat status jadwal…</span>
-        </div>
-        <div style="margin-top:16px"><h3 style="font-size:14px">Log Pengingat Terakhir</h3><div id="sppIngatLog" style="margin-top:8px"></div></div>
-      </div>
       <div class="card hanya-pelatih">
         <h3>Matriks SPP Tahunan</h3>
         <div class="sub">Status SPP semua atlet per bulan dalam satu tahun.</div>
@@ -1031,7 +999,7 @@ var BULAN_SINGKAT=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","
      {error:"..."} dari backend; itu diteruskan apa adanya supaya tanganiResError()
      di pemanggil tetap bekerja seperti sebelumnya.
    - Gagal transport / HTTP != 200 / bukan JSON / {ok:false} -> reject(Error). */
-var BACKEND_URL="https://script.google.com/macros/s/AKfycbxvIEVWeQImX0A5wxl_DAO-HunlQV8HH3GJ39JYy7B0ODwo6xIDG7ggpBzebwEr33cWZQ/exec";
+var BACKEND_URL="https://script.google.com/macros/s/AKfycbzzTH0Q0i3OnxDE2eqLVi2efv_-EMJhfgOSnz93UDo_DZpqDxmuGlJ49xFf5KZxOL3Y/exec";
 function panggilBackend(namaFungsi, argsArray, signal){
   var opt={method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({fn:namaFungsi, args:argsArray||[]})};
   if(signal) opt.signal=signal;
@@ -2395,7 +2363,6 @@ function siapkanViewSpp(){
     $("sppNamaAtlet").readOnly=false;
     $("cardSppCoach").classList.remove("hidden");
     muatDaftarKonfirmasiSpp();
-    siapkanPengingatSpp();
   }
 }
 function kirimKonfirmasiSpp(){
@@ -2494,158 +2461,6 @@ function muatMatriksSpp(){
       h+='<td class="mono"><b>'+(r.totalLunas||0)+'/12</b></td></tr>';
     });
     h+='</tbody></table></div>';
-    box.innerHTML=h;
-  }, gagalServer);
-}
-
-/* ---------- PENGINGAT SPP OTOMATIS (v13.1) ---------- */
-var sppIngatDaftarTerakhir=null;
-var sppIngatPengaturanTerakhir=null;
-function siapkanPengingatSpp(){
-  if(!isPelatih()) return;
-  $("sppIngatBulan").value=bulanIniYM();
-  muatStatusTriggerPengingat();
-  muatLogPengingatSpp();
-  muatPengaturanPengingatSpp();
-}
-function muatDaftarPengingatSpp(){
-  var bulan=$("sppIngatBulan").value||"";
-  if(!bulan){ showAlert("Perhatian","Pilih bulan dulu."); return; }
-  panggilServer("getDaftarPengingatSpp",[getToken(), bulan],{ pesan:"Memuat daftar pengingat SPP…", autoRetry:true, onSukses:function(res){
-    showLoading(false);
-    if(tanganiResError(res)) return;
-    sppIngatDaftarTerakhir=res;
-    var arr=(res&&res.daftar)||[];
-    var ring=res&&res.ringkasan?res.ringkasan:null;
-    var box=$("sppIngatDaftar");
-    var h="";
-    if(ring) h+='<p class="small">Bulan <b>'+esc(res.bulanTahun||bulan)+'</b> — '+ring.perluDiingatkan+' perlu diingatkan dari '+ring.total+' atlet ('+ring.lunas+' Lunas, '+ring.pending+' Pending, '+ring.ditolak+' Ditolak, '+ring.belumAda+' Belum Ada, '+ring.tanpaHp+' tanpa HP).</p>';
-    if(!arr.length){ box.innerHTML=h+'<p class="empty">Belum ada data atlet.</p>'; return; }
-    arr.forEach(function(r){
-      var perlu=!!r.perluDiingatkan;
-      var pillCls=r.statusBulan==="LUNAS"?"ok":r.statusBulan==="DITOLAK"?"danger":"wait";
-      h+='<div class="act"><div style="flex:1;min-width:0"><b>'+esc(r.namaLengkap||r.namaPanggilan||"-")+'</b> <span class="small muted">('+esc(r.namaPanggilan||"")+' · '+esc(r.noHp||"tanpa HP")+')</span><br><span class="mono small">'+formatRupiah(r.nominal||0)+'</span> <span class="small muted">'+esc(r.alasan||"")+'</span></div><span class="pill '+pillCls+'">'+esc(r.statusBulan||"-")+'</span>'+(perlu?'<span class="pill info">Ingatkan</span>':'<span class="pill">Lewati</span>')+'</div>';
-    });
-    box.innerHTML=h;
-  }});
-}
-function kirimPengingatSppUI(){
-  if(!isPelatih()) return;
-  var bulan=$("sppIngatBulan").value||"";
-  if(!bulan){ showAlert("Perhatian","Pilih bulan dulu."); return; }
-  var daftar=sppIngatDaftarTerakhir&&sppIngatDaftarTerakhir.daftar?sppIngatDaftarTerakhir.daftar:null;
-  if(!daftar){ showAlert("Perhatian","Klik “Lihat Daftar” dulu untuk melihat siapa yang akan diingatkan."); return; }
-  var paksa=$("sppIngatPaksa")&&$("sppIngatPaksa").checked;
-  var namaKirim=daftar.filter(function(r){ return r.perluDiingatkan && (paksa || !r.sudahDiingatkan); }).map(function(r){ return r.namaPanggilan; });
-  if(!namaKirim.length){ showAlert("Perhatian","Tidak ada wali yang perlu diingatkan bulan ini (semua sudah Lunas/Pending, atau sudah diingatkan — centang “Kirim ulang” bila tetap mau kirim)."); return; }
-  showConfirm("Kirim Pengingat SPP?","Kirim WA pengingat SPP bulan "+bulan+" ke "+namaKirim.length+" wali? Yang LUNAS dan PENDING VERIFIKASI tidak dikirimi.","Ya, Kirim").then(function(ya){
-    if(!ya) return;
-    panggilServer("kirimPengingatSpp",[getToken(), bulan, namaKirim, paksa],{ pesan:"Mengirim pengingat SPP…", autoRetry:false, onSukses:function(res){
-      showLoading(false);
-      if(tanganiResError(res)) return;
-      toast("Pengingat SPP: "+(res.terkirim||0)+" terkirim, "+(res.gagal||0)+" gagal, "+(res.dilewati||0)+" dilewati.");
-      muatDaftarPengingatSpp();
-      muatLogPengingatSpp();
-    }});
-  });
-}
-function kirimPengingatSppUjiUI(){
-  if(!isPelatih()) return;
-  var nomor=($("sppIngatUjiNomor").value||"").trim();
-  if(!nomor){ showAlert("Perhatian","Isi nomor HP tujuan WA uji dulu."); return; }
-  showConfirm("Kirim WA Uji?","Kirim satu pesan uji gateway Fonnte ke "+nomor+"? Pesan diawali [UJI] dan dicatat di log sebagai “UJI” — tidak memengaruhi pengiriman nyata.","Ya, Kirim").then(function(ya){
-    if(!ya) return;
-    panggilServer("kirimPengingatSppUji",[getToken(), nomor],{ pesan:"Mengirim WA uji…", autoRetry:false, onSukses:function(res){
-      showLoading(false);
-      if(tanganiResError(res)) return;
-      toast(res.success||"WA uji terkirim.");
-      muatLogPengingatSpp();
-    }});
-  });
-}
-function teksJadwalPengingatSpp(p){
-  if(!p||!Array.isArray(p.tanggal)||!p.tanggal.length) return "tanggal 5 dan 20 jam 08:00";
-  var jam=(p.jam===undefined||p.jam===null)?8:p.jam;
-  var jamTxt=jam<10?"0"+jam:""+jam;
-  return "tanggal "+p.tanggal.join(", ")+" jam "+jamTxt+":00";
-}
-function muatStatusTriggerPengingat(){
-  panggilBackend("getStatusTriggerPengingatSpp",[getToken()]).then(function(res){
-    if(tanganiResError(res)) return;
-    var el=$("sppIngatTriggerStatus"); if(!el) return;
-    var jadwal=teksJadwalPengingatSpp(res);
-    if(res&&res.aktif){ el.textContent="Jadwal otomatis AKTIF ("+res.jumlah+" trigger: "+jadwal+")."; }
-    else { el.textContent="Jadwal otomatis BELUM dipasang (jadwal tersimpan: "+jadwal+")."; }
-  }, gagalServer);
-}
-function muatPengaturanPengingatSpp(){
-  panggilBackend("getPengaturanPengingatSpp",[getToken()]).then(function(res){
-    if(tanganiResError(res)) return;
-    sppIngatPengaturanTerakhir=res;
-    if($("sppIngatTanggal")) $("sppIngatTanggal").value=Array.isArray(res.tanggal)?res.tanggal.join(", "):"";
-    if($("sppIngatJam")) $("sppIngatJam").value=(res.jam===undefined||res.jam===null)?"":res.jam;
-    if($("sppIngatNominal")) $("sppIngatNominal").value=(res.nominal===undefined||res.nominal===null)?"":res.nominal;
-  }, gagalServer);
-}
-function simpanPengaturanPengingatSppUI(){
-  if(!isPelatih()) return;
-  var tglStr=($("sppIngatTanggal").value||"").trim();
-  var jamVal=parseInt($("sppIngatJam").value,10);
-  var nomVal=parseInt($("sppIngatNominal").value,10);
-  if(!tglStr){ showAlert("Perhatian","Isi tanggal kirim dulu (cth: 5, 20)."); return; }
-  var tanggal=tglStr.split(",").map(function(s){ return parseInt(s.trim(),10); });
-  if(tanggal.some(function(n){ return isNaN(n); })){ showAlert("Perhatian","Tanggal kirim tidak valid — isi angka dipisah koma (cth: 5, 20)."); return; }
-  if(isNaN(jamVal)){ showAlert("Perhatian","Isi jam kirim (0–23)."); return; }
-  if(isNaN(nomVal)){ showAlert("Perhatian","Isi nominal SPP (Rp)."); return; }
-  var pengaturan={tanggal:tanggal, jam:jamVal, nominal:nomVal};
-  panggilServer("simpanPengaturanPengingatSpp",[getToken(), pengaturan],{ pesan:"Menyimpan pengaturan…", autoRetry:false, onSukses:function(res){
-    showLoading(false);
-    if(tanganiResError(res)) return;
-    toast(res.success||"Pengaturan disimpan.");
-    sppIngatPengaturanTerakhir=res.pengaturan||pengaturan;
-    muatStatusTriggerPengingat();
-    muatDaftarPengingatSpp();
-  }});
-}
-function pasangJadwalPengingatSpp(){
-  if(!isPelatih()) return;
-  var jadwal=teksJadwalPengingatSpp(sppIngatPengaturanTerakhir);
-  showConfirm("Pasang Jadwal Otomatis?","Pengingat SPP akan terkirim otomatis tiap "+jadwal+" (hanya ke wali yang belum kirim bukti / ditolak).","Ya, Pasang").then(function(ya){
-    if(!ya) return;
-    panggilServer("pasangTriggerPengingatSpp",[getToken()],{ pesan:"Memasang jadwal otomatis…", autoRetry:false, onSukses:function(res){
-      showLoading(false);
-      if(tanganiResError(res)) return;
-      toast(res.success||"Jadwal otomatis dipasang.");
-      muatStatusTriggerPengingat();
-    }});
-  });
-}
-function hapusJadwalPengingatSpp(){
-  if(!isPelatih()) return;
-  var jadwal=teksJadwalPengingatSpp(sppIngatPengaturanTerakhir);
-  showConfirm("Hapus Jadwal Otomatis?","Trigger pengingat SPP ("+jadwal+") akan dihapus. Pengingat manual tetap bisa dipakai.","Ya, Hapus").then(function(ya){
-    if(!ya) return;
-    panggilServer("hapusTriggerPengingatSpp",[getToken()],{ pesan:"Menghapus jadwal otomatis…", autoRetry:false, onSukses:function(res){
-      showLoading(false);
-      if(tanganiResError(res)) return;
-      toast(res.success||"Jadwal otomatis dihapus.");
-      muatStatusTriggerPengingat();
-    }});
-  });
-}
-function muatLogPengingatSpp(){
-  panggilBackend("getLogPengingatSpp",[getToken(), 20]).then(function(res){
-    if(tanganiResError(res)) return;
-    var arr=Array.isArray(res)?res:[];
-    var box=$("sppIngatLog"); if(!box) return;
-    if(!arr.length){ box.innerHTML='<p class="empty">Belum ada pengingat yang dikirim.</p>'; return; }
-    var h="";
-    arr.forEach(function(r){
-      var st=String(r.statusKirim||"");
-      var ok=st==="TERKIRIM";
-      var uji=st==="UJI";
-      h+='<div class="act"><span class="ic '+(ok?"green":uji?"blue":"rose")+'">'+((ok||uji)?"✓":"✕")+'</span><div style="flex:1;min-width:0"><b>'+esc(r.namaLengkap||r.namaPanggilan||"-")+'</b> <span class="small muted">('+esc(r.bulanTahun||"-")+' · '+formatRupiah(r.nominal||0)+')</span><br><span class="small muted">'+esc(r.statusKirim||"-")+(r.pesan?" — "+esc(String(r.pesan).substring(0,120)):"")+'</span></div><span class="small muted">'+esc(String(r.timestamp||"").substring(0,16))+'</span></div>';
-    });
     box.innerHTML=h;
   }, gagalServer);
 }
