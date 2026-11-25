@@ -2452,6 +2452,685 @@ function getRekapMatriksSppAdmin(token, tahun) {
 }
 
 // ====================================================
+// MODUL PENGINGAT SPP OTOMATIS VIA WHATSAPP (v13.1)
+// Sheet LOG_PENGINGAT_SPP kolom: TIMESTAMP, BULAN TAHUN,
+// NAMA PANGGILAN, NAMA LENGKAP, NO HP, NOMINAL,
+// STATUS KIRIM, PESAN.
+// Aturan target (Ndaru, 24 Nov 2026): WA HANYA ke wali yang
+// BELUM kirim bukti TF (tidak ada baris SPP bulan itu) atau
+// buktinya DITOLAK admin. JANGAN ke PENDING VERIFIKASI
+// (sudah kirim, menunggu admin) dan JANGAN ke LUNAS.
+// Anti-dobel: pengingat untuk (atlet, bulan) yang sudah
+// TERKIRIM di LOG tidak dikirim lagi, kecuali paksa=true.
+// Jadwal + nominal BISA DIATUR PELATIH (Ndaru, 24 Nov 2026):
+// tersimpan di Script Properties key PENGINGAT_SPP_JADWAL
+// (JSON {tanggal:[5,20], jam:8, nominal:250000}); simpan
+// pengaturan baru memasang ulang trigger bila sudah aktif.
+// ====================================================
+
+var NOMINAL_SPP_DEFAULT = 250000;
+
+// Pengaturan jadwal + nominal pengingat (v13.1, bisa diatur pelatih
+// dari kartu "Pengingat SPP Otomatis" di view-spp). Disimpan di
+// Script Properties key PENGINGAT_SPP_JADWAL sebagai JSON:
+// { tanggal: [5, 20], jam: 8, nominal: 250000 }.
+// tanggal = tanggal kirim tiap bulan (1-28, maks 4 tanggal);
+// jam = jam kirim 0-23 (zona waktu skrip);
+// nominal = nominal fallback SPP (Rp) bila atlet belum punya
+// nominal SPP terakhir.
+var PENGINGAT_SPP_JADWAL_KEY = "PENGINGAT_SPP_JADWAL";
+var PENGINGAT_SPP_JADWAL_DEFAULT = { tanggal: [5, 20], jam: 8, nominal: 250000 };
+
+// Internal: normalisasi tanggal kirim (array / string "5, 20").
+// Kembalikan {ok:true, tanggal:[...]} atau {ok:false, error:"..."}.
+// Duplikat dibuang, hasil diurutkan menaik.
+function normalisasiTanggalPengingat_(tanggal) {
+  var daftar = tanggal;
+  if (typeof tanggal === "string") {
+    daftar = tanggal.split(/[,;\s]+/).filter(function (s) { return s !== ""; });
+  }
+  if (!Array.isArray(daftar)) return { ok: false, error: "Tanggal kirim harus berupa daftar tanggal (cth: 5, 20)." };
+  if (daftar.length < 1) return { ok: false, error: "Tanggal kirim wajib diisi minimal 1 tanggal." };
+  if (daftar.length > 4) return { ok: false, error: "Tanggal kirim maksimal 4 tanggal." };
+  var bersih = [];
+  for (var i = 0; i < daftar.length; i++) {
+    var n = Number(daftar[i]);
+    if (n !== Math.floor(n) || n < 1 || n > 28) {
+      return { ok: false, error: "Tanggal kirim tidak valid: \"" + daftar[i] + "\". Isi 1-4 tanggal, tiap tanggal 1-28 (maks 28 supaya jalan tiap bulan termasuk Februari)." };
+    }
+    if (bersih.indexOf(n) === -1) bersih.push(n);
+  }
+  bersih.sort(function (a, b) { return a - b; });
+  return { ok: true, tanggal: bersih };
+}
+
+// Internal: validasi objek pengaturan (dipakai simpan + baca).
+// Bidang yang tidak ada (undefined/null) diisi dari `dasar`
+// (pengaturan tersimpan saat ini saat simpan; default saat baca)
+// — jadi simpan parsial aman dan tidak ada yang tersimpan
+// setengah-setengah. Kembalikan {ok:true, bersih:{tanggal, jam,
+// nominal}} atau {ok:false, error:"..."}.
+function validasiPengaturanPengingatSpp_(pengaturan, dasar) {
+  if (!pengaturan || typeof pengaturan !== "object" || Array.isArray(pengaturan)) {
+    return { ok: false, error: "Pengaturan tidak valid." };
+  }
+  var dasarOk = dasar || PENGINGAT_SPP_JADWAL_DEFAULT;
+  var tanggalIn = (pengaturan.tanggal === undefined || pengaturan.tanggal === null) ? dasarOk.tanggal : pengaturan.tanggal;
+  var tgl = normalisasiTanggalPengingat_(tanggalIn);
+  if (!tgl.ok) return { ok: false, error: tgl.error };
+  var jamIn = (pengaturan.jam === undefined || pengaturan.jam === null) ? dasarOk.jam : pengaturan.jam;
+  var jam = Number(jamIn);
+  if (jam !== Math.floor(jam) || jam < 0 || jam > 23) {
+    return { ok: false, error: "Jam kirim tidak valid: \"" + jamIn + "\". Isi jam 0-23." };
+  }
+  var nomIn = (pengaturan.nominal === undefined || pengaturan.nominal === null) ? dasarOk.nominal : pengaturan.nominal;
+  var nominal = Number(nomIn);
+  if (nominal !== Math.floor(nominal) || nominal <= 0) {
+    return { ok: false, error: "Nominal tidak valid: \"" + nomIn + "\". Isi nominal Rp lebih dari 0." };
+  }
+  return { ok: true, bersih: { tanggal: tgl.tanggal, jam: jam, nominal: nominal } };
+}
+
+// Internal: baca pengaturan tersimpan (fallback ke default bila
+// belum ada, rusak, atau per-bidang tidak valid).
+function bacaPengaturanPengingatSpp_() {
+  var def = PENGINGAT_SPP_JADWAL_DEFAULT;
+  var hasil = { tanggal: def.tanggal.slice(), jam: def.jam, nominal: def.nominal };
+  try {
+    var mentah = PropertiesService.getScriptProperties().getProperty(PENGINGAT_SPP_JADWAL_KEY);
+    if (!mentah) return hasil;
+    var obj = JSON.parse(mentah);
+    if (!obj || typeof obj !== "object") return hasil;
+    var v = validasiPengaturanPengingatSpp_(obj);
+    if (v.ok) return v.bersih;
+    // Per-bidang: pakai yang valid, yang tidak valid pakai default.
+    if (obj.tanggal !== undefined && obj.tanggal !== null) {
+      var tgl = normalisasiTanggalPengingat_(obj.tanggal);
+      if (tgl.ok) hasil.tanggal = tgl.tanggal;
+    }
+    if (obj.jam !== undefined && obj.jam !== null) {
+      var jm = Number(obj.jam);
+      if (jm === Math.floor(jm) && jm >= 0 && jm <= 23) hasil.jam = jm;
+    }
+    if (obj.nominal !== undefined && obj.nominal !== null) {
+      var nom = Number(obj.nominal);
+      if (nom === Math.floor(nom) && nom > 0) hasil.nominal = nom;
+    }
+    return hasil;
+  } catch (err) {
+    return hasil;
+  }
+}
+
+// Internal: nominal fallback SPP dari pengaturan tersimpan
+// (bukan lagi hardcode). Bila PropertiesService gagal dibaca,
+// pakai NOMINAL_SPP_DEFAULT.
+function nominalDefaultPengingatSpp_() {
+  try {
+    return bacaPengaturanPengingatSpp_().nominal;
+  } catch (err) {
+    return NOMINAL_SPP_DEFAULT;
+  }
+}
+
+function getLogPengingatSppSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("LOG_PENGINGAT_SPP");
+  if (!sheet) {
+    sheet = ss.insertSheet("LOG_PENGINGAT_SPP");
+    sheet.appendRow(["TIMESTAMP", "BULAN TAHUN", "NAMA PANGGILAN", "NAMA LENGKAP", "NO HP", "NOMINAL", "STATUS KIRIM", "PESAN"]);
+  }
+  return sheet;
+}
+
+// Internal: daftar atlet dari PROFIL_ATLET/PROFIL:
+// [{namaPanggilan, namaLengkap, noHp}]
+function bacaDaftarAtletPengingat_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("PROFIL_ATLET") || ss.getSheetByName("PROFIL");
+  var daftar = [];
+  if (!sheet) return daftar;
+  var data = sheet.getDataRange().getDisplayValues();
+  if (data.length < 2) return daftar;
+  var headers = data[0];
+  var idxPanggilan = getColumnIndex(headers, ["NAMA PANGGILAN", "NAMA_PANGGILAN"]);
+  var idxLengkap = getColumnIndex(headers, ["NAMA LENGKAP", "NAMA LENGKAP"]);
+  var idxHp = getColumnIndex(headers, ["NOMOR HP", "NOMOR_HP", "NO_HP", "NO HP", "NO_WA", "HP_WALI"]);
+  if (idxPanggilan === -1) idxPanggilan = 0;
+  if (idxLengkap === -1) idxLengkap = 1;
+  if (idxHp === -1) idxHp = 7;
+  for (var i = 1; i < data.length; i++) {
+    var panggilan = String(data[i][idxPanggilan] || "").trim().toUpperCase();
+    if (!panggilan) continue;
+    var noHp = (idxHp !== -1 && idxHp < data[i].length) ? String(data[i][idxHp] || "").replace(/'/g, "").trim() : "";
+    daftar.push({
+      namaPanggilan: panggilan,
+      namaLengkap: String(data[i][idxLengkap] || "").trim() || panggilan,
+      noHp: noHp
+    });
+  }
+  return daftar;
+}
+
+// Internal: peta status SPP bulan `bulanFmt` per atlet.
+// Kunci: nama ternormalisasi (panggilan & lengkap) ->
+// {status, nominal}. LUNAS bersifat sticky (tidak ditimpa
+// baris duplikat non-LUNAS, pola yang sama dengan
+// getRekapMatriksSppAdmin); selain itu baris terakhir menang
+// (mis. wali kirim ulang setelah DITOLAK -> PENDING).
+function bacaStatusSppBulan_(bulanFmt) {
+  var peta = {};
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("PEMBAYARAN_SPP");
+  if (!sheet) return peta;
+  var data = sheet.getDataRange().getDisplayValues();
+  if (data.length < 2) return peta;
+  var headers = data[0];
+  var idxPanggilan = getColumnIndex(headers, ["NAMA PANGGILAN", "NAMA_PANGGILAN"]);
+  var idxLengkap = getColumnIndex(headers, ["NAMA LENGKAP", "NAMA LENGKAP"]);
+  var idxBulan = getColumnIndex(headers, ["BULAN TAHUN", "BULAN_TAHUN", "BULAN"]);
+  var idxNominal = getColumnIndex(headers, ["NOMINAL"]);
+  var idxStatus = getColumnIndex(headers, ["STATUS"]);
+  if (idxPanggilan === -1) idxPanggilan = 1;
+  if (idxLengkap === -1) idxLengkap = 2;
+  if (idxBulan === -1) idxBulan = 3;
+  if (idxNominal === -1) idxNominal = 4;
+  if (idxStatus === -1) idxStatus = 5;
+  var kunciBulan = normalisasiNama(bulanFmt);
+  for (var i = 1; i < data.length; i++) {
+    if (normalisasiNama(formatBulanTahunIndonesia(data[i][idxBulan])) !== kunciBulan) continue;
+    var status = String(data[i][idxStatus] || "").trim().toUpperCase();
+    if (!status) continue;
+    var nominal = Number(data[i][idxNominal]);
+    var entri = { status: status, nominal: isNaN(nominal) ? 0 : nominal };
+    var kunciList = [normalisasiNama(data[i][idxPanggilan]), normalisasiNama(data[i][idxLengkap])];
+    for (var k = 0; k < kunciList.length; k++) {
+      var kunci = kunciList[k];
+      if (!kunci) continue;
+      var lama = peta[kunci];
+      if (lama && lama.status === "LUNAS" && status !== "LUNAS") continue;
+      peta[kunci] = entri;
+    }
+  }
+  return peta;
+}
+
+// Internal: nominal SPP terakhir tiap atlet (baris terbaru di
+// PEMBAYARAN_SPP, semua bulan). Kunci nama ternormalisasi ->
+// nominal. Dipakai bila atlet belum punya baris di bulan target.
+function bacaNominalTerakhirSpp_() {
+  var peta = {};
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("PEMBAYARAN_SPP");
+  if (!sheet) return peta;
+  var data = sheet.getDataRange().getDisplayValues();
+  if (data.length < 2) return peta;
+  var headers = data[0];
+  var idxPanggilan = getColumnIndex(headers, ["NAMA PANGGILAN", "NAMA_PANGGILAN"]);
+  var idxLengkap = getColumnIndex(headers, ["NAMA LENGKAP", "NAMA LENGKAP"]);
+  var idxNominal = getColumnIndex(headers, ["NOMINAL"]);
+  if (idxPanggilan === -1) idxPanggilan = 1;
+  if (idxLengkap === -1) idxLengkap = 2;
+  if (idxNominal === -1) idxNominal = 4;
+  for (var i = 1; i < data.length; i++) {
+    var nominal = Number(data[i][idxNominal]);
+    if (!(nominal > 0)) continue;
+    var kunciList = [normalisasiNama(data[i][idxPanggilan]), normalisasiNama(data[i][idxLengkap])];
+    for (var k = 0; k < kunciList.length; k++) {
+      if (kunciList[k]) peta[kunciList[k]] = nominal;
+    }
+  }
+  return peta;
+}
+
+// Internal: himpunan nama (ternormalisasi) yang SUDAH TERKIRIM
+// pengingatnya untuk `bulanFmt` (dari LOG_PENGINGAT_SPP).
+// Hanya STATUS KIRIM "TERKIRIM" yang menghalangi kirim ulang;
+// baris GAGAL boleh dicoba lagi.
+function bacaSudahDiingatkan_(bulanFmt) {
+  var sudah = {};
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("LOG_PENGINGAT_SPP");
+  if (!sheet) return sudah;
+  var data = sheet.getDataRange().getDisplayValues();
+  if (data.length < 2) return sudah;
+  var headers = data[0];
+  var idxBulan = getColumnIndex(headers, ["BULAN TAHUN", "BULAN_TAHUN", "BULAN"]);
+  var idxPanggilan = getColumnIndex(headers, ["NAMA PANGGILAN", "NAMA_PANGGILAN"]);
+  var idxLengkap = getColumnIndex(headers, ["NAMA LENGKAP", "NAMA LENGKAP"]);
+  var idxStatus = getColumnIndex(headers, ["STATUS KIRIM", "STATUS_KIRIM", "STATUS"]);
+  if (idxBulan === -1) idxBulan = 1;
+  if (idxPanggilan === -1) idxPanggilan = 2;
+  if (idxLengkap === -1) idxLengkap = 3;
+  if (idxStatus === -1) idxStatus = 6;
+  var kunciBulan = normalisasiNama(bulanFmt);
+  for (var i = 1; i < data.length; i++) {
+    if (normalisasiNama(formatBulanTahunIndonesia(data[i][idxBulan])) !== kunciBulan) continue;
+    if (String(data[i][idxStatus] || "").trim().toUpperCase() !== "TERKIRIM") continue;
+    sudah[normalisasiNama(data[i][idxPanggilan])] = true;
+    sudah[normalisasiNama(data[i][idxLengkap])] = true;
+  }
+  return sudah;
+}
+
+// Internal: bangun daftar pengingat untuk `bulanFmt`.
+// Mengembalikan {bulanTahun, daftar, ringkasan}.
+// perluDiingatkan = true HANYA untuk status BELUM ADA atau
+// DITOLAK DAN punya nomor HP.
+function hitungDaftarPengingatSpp_(bulanFmt) {
+  var atlet = bacaDaftarAtletPengingat_();
+  var statusBulan = bacaStatusSppBulan_(bulanFmt);
+  var nominalTerakhir = bacaNominalTerakhirSpp_();
+  var sudah = bacaSudahDiingatkan_(bulanFmt);
+  var nominalDefault = nominalDefaultPengingatSpp_();
+  var daftar = [];
+  var ringkasan = { total: 0, perluDiingatkan: 0, sudahDiingatkan: 0, lunas: 0, pending: 0, ditolak: 0, belumAda: 0, tanpaHp: 0 };
+  for (var i = 0; i < atlet.length; i++) {
+    var a = atlet[i];
+    var kunci = normalisasiNama(a.namaPanggilan);
+    var kunciL = normalisasiNama(a.namaLengkap);
+    var entri = statusBulan[kunci] || statusBulan[kunciL] || null;
+    var status = entri ? entri.status : "BELUM ADA";
+    var nominal = (entri && entri.nominal > 0) ? entri.nominal : (nominalTerakhir[kunci] || nominalTerakhir[kunciL] || nominalDefault);
+    var sudahDiingatkan = !!(sudah[kunci] || sudah[kunciL]);
+    var perlu = false;
+    var alasan = "";
+    if (!a.noHp) {
+      alasan = "Nomor HP wali tidak ada — dilewati.";
+    } else if (status === "LUNAS") {
+      alasan = "Sudah LUNAS bulan ini.";
+    } else if (status === "PENDING VERIFIKASI") {
+      alasan = "Sudah kirim bukti — menunggu verifikasi admin.";
+    } else if (status === "DITOLAK") {
+      perlu = true;
+      alasan = "Bukti ditolak admin — mohon kirim ulang.";
+    } else {
+      perlu = true;
+      alasan = "Belum ada konfirmasi SPP bulan ini.";
+    }
+    if (sudahDiingatkan && perlu) alasan = alasan + " (Sudah diingatkan bulan ini.)";
+    ringkasan.total++;
+    if (status === "LUNAS") ringkasan.lunas++;
+    else if (status === "PENDING VERIFIKASI") ringkasan.pending++;
+    else if (status === "DITOLAK") ringkasan.ditolak++;
+    else ringkasan.belumAda++;
+    if (!a.noHp) ringkasan.tanpaHp++;
+    if (perlu) ringkasan.perluDiingatkan++;
+    if (sudahDiingatkan) ringkasan.sudahDiingatkan++;
+    daftar.push({
+      namaPanggilan: a.namaPanggilan,
+      namaLengkap: a.namaLengkap,
+      noHp: a.noHp,
+      statusBulan: status,
+      nominal: nominal,
+      perluDiingatkan: perlu,
+      alasan: alasan,
+      sudahDiingatkan: sudahDiingatkan
+    });
+  }
+  return { bulanTahun: bulanFmt, daftar: daftar, ringkasan: ringkasan };
+}
+
+// Internal: susun teks WA pengingat untuk satu atlet.
+// Varian DITOLAK: bukti belum dapat diterima, mohon kirim ulang.
+function susunPesanPengingatSpp_(item, bulanFmt) {
+  var nominalRp = "Rp " + Number(item.nominal || nominalDefaultPengingatSpp_()).toLocaleString("id-ID");
+  var sapaan = "Yth. Wali/Orang Tua dari *" + String(item.namaLengkap || item.namaPanggilan).toUpperCase() + "*,";
+  if (item.statusBulan === "DITOLAK") {
+    return "🔔 *PENGINGAT SPP ACS BANJARNEGARA*\n\n" + sapaan + "\n\n" +
+      "Bukti pembayaran SPP bulan *" + bulanFmt + "* (" + nominalRp + ") belum dapat kami terima, mohon kirim ulang bukti transfer yang jelas melalui menu SPP di aplikasi Rapot Digital ACS.\n\n" +
+      "Terima kasih 🙏\n\n_Pesan otomatis oleh System E-Rapor ACS Banjarnegara_";
+  }
+  return "🔔 *PENGINGAT SPP ACS BANJARNEGARA*\n\n" + sapaan + "\n\n" +
+    "SPP bulan *" + bulanFmt + "* (" + nominalRp + ") belum kami terima konfirmasi pembayarannya. Mohon kirim bukti transfer melalui menu SPP di aplikasi Rapot Digital ACS.\n\n" +
+    "Terima kasih 🙏\n\n_Pesan otomatis oleh System E-Rapor ACS Banjarnegara_";
+}
+
+// Internal: tulis satu baris ke LOG_PENGINGAT_SPP.
+function tulisLogPengingatSpp_(bulanFmt, item, statusKirim, pesan) {
+  var sheet = getLogPengingatSppSheet();
+  sheet.appendRow([
+    new Date(),
+    "'" + bulanFmt,
+    "'" + String(item.namaPanggilan || "").toUpperCase(),
+    "'" + String(item.namaLengkap || ""),
+    "'" + String(item.noHp || ""),
+    item.nominal,
+    "'" + statusKirim,
+    "'" + String(pesan || "").substring(0, 1000)
+  ]);
+}
+
+// Preview daftar pengingat SPP bulan tertentu (pelatih only).
+// Tidak mengirim WA apa pun.
+function getDaftarPengingatSpp(token, bulanTahun) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  try {
+    var bulanFmt = formatBulanTahunIndonesia(bulanTahun);
+    if (!parseBulanTahun(bulanFmt)) return { error: "Bulan tidak valid. Pilih bulan (cth: 2026-11)." };
+    return hitungDaftarPengingatSpp_(bulanFmt);
+  } catch (err) {
+    return { error: err.toString() };
+  }
+}
+
+// Kirim pengingat SPP via WA Fonnte (pelatih only, dalam lock).
+// daftarNamaPanggilan: array nama panggilan target; bila kosong /
+// tidak diisi, kirim ke SEMUA yang perluDiingatkan.
+// paksa=true: kirim ulang walau sudah ada TERKIRIM di LOG bulan itu.
+// Setiap percobaan (TERKIRIM/GAGAL) ditulis ke LOG.
+function kirimPengingatSpp(token, bulanTahun, daftarNamaPanggilan, paksa) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  var bulanFmt = formatBulanTahunIndonesia(bulanTahun);
+  if (!parseBulanTahun(bulanFmt)) return { error: "Bulan tidak valid. Pilih bulan (cth: 2026-11)." };
+  var paksaKirim = paksa === true || String(paksa) === "true";
+  return denganLock(function() {
+    try {
+      var hitung = hitungDaftarPengingatSpp_(bulanFmt);
+      var target = null;
+      if (Array.isArray(daftarNamaPanggilan) && daftarNamaPanggilan.length > 0) {
+        target = {};
+        for (var t = 0; t < daftarNamaPanggilan.length; t++) target[normalisasiNama(daftarNamaPanggilan[t])] = true;
+      }
+      var hasil = [];
+      var terkirim = 0, gagal = 0, dilewati = 0;
+      for (var i = 0; i < hitung.daftar.length; i++) {
+        var item = hitung.daftar[i];
+        if (target && !target[normalisasiNama(item.namaPanggilan)] && !target[normalisasiNama(item.namaLengkap)]) continue;
+        if (!item.perluDiingatkan) {
+          dilewati++;
+          hasil.push({ namaPanggilan: item.namaPanggilan, namaLengkap: item.namaLengkap, noHp: item.noHp, statusBulan: item.statusBulan, hasil: "DILEWATI", alasan: item.alasan });
+          continue;
+        }
+        if (item.sudahDiingatkan && !paksaKirim) {
+          dilewati++;
+          hasil.push({ namaPanggilan: item.namaPanggilan, namaLengkap: item.namaLengkap, noHp: item.noHp, statusBulan: item.statusBulan, hasil: "DILEWATI", alasan: "Sudah diingatkan bulan ini (lihat LOG). Centang kirim ulang untuk mengirim lagi." });
+          continue;
+        }
+        var pesan = susunPesanPengingatSpp_(item, bulanFmt);
+        var statusKirim = kirimPesanFonnte(item.noHp, pesan);
+        if (String(statusKirim).indexOf("WA Terkirim") !== -1) {
+          terkirim++;
+          tulisLogPengingatSpp_(bulanFmt, item, "TERKIRIM", pesan);
+          hasil.push({ namaPanggilan: item.namaPanggilan, namaLengkap: item.namaLengkap, noHp: item.noHp, statusBulan: item.statusBulan, hasil: "TERKIRIM", alasan: "" });
+        } else {
+          gagal++;
+          tulisLogPengingatSpp_(bulanFmt, item, "GAGAL", String(statusKirim));
+          hasil.push({ namaPanggilan: item.namaPanggilan, namaLengkap: item.namaLengkap, noHp: item.noHp, statusBulan: item.statusBulan, hasil: "GAGAL", alasan: String(statusKirim) });
+        }
+      }
+      return { bulanTahun: bulanFmt, terkirim: terkirim, gagal: gagal, dilewati: dilewati, hasil: hasil };
+    } catch (err) {
+      return { error: err.toString() };
+    }
+  });
+}
+
+// Kirim SATU WA uji ke nomor sembarang (pelatih only) — untuk
+// memverifikasi gateway Fonnte sebelum kirim nyata.
+// Normalisasi nomor (08xx -> 628xx) dilakukan di dalam
+// kirimPesanFonnte; fungsi ini tidak menulis normalisasi sendiri.
+// Bila WA terkirim, dicatat di LOG_PENGINGAT_SPP dengan STATUS
+// "UJI" (bulan berjalan, NAMA "UJI") — status ini TIDAK PERNAH
+// memblokir pengiriman nyata (hanya "TERKIRIM" yang memblokir,
+// lihat bacaSudahDiingatkan_). Bila gagal / nomor tidak valid /
+// token Fonnte belum diatur -> {error} dan TIDAK ada baris log.
+function kirimPengingatSppUji(token, nomorHp) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  var nomor = String(nomorHp || "").trim();
+  if (!nomor) return { error: "Nomor HP tujuan wajib diisi." };
+  var pesan = "[UJI] Pengingat SPP Otomatis ACS — pesan uji gateway. Abaikan pesan ini.";
+  var statusKirim = kirimPesanFonnte(nomor, pesan);
+  if (String(statusKirim).indexOf("WA Terkirim") === -1) {
+    return { error: String(statusKirim) };
+  }
+  try {
+    var kini = new Date();
+    var bulanFmt = formatBulanTahunIndonesia(kini.getFullYear() + "-" + ("0" + (kini.getMonth() + 1)).slice(-2));
+    tulisLogPengingatSpp_(bulanFmt, { namaPanggilan: "UJI", namaLengkap: "UJI", noHp: nomor, nominal: 0 }, "UJI", pesan);
+  } catch (e) {
+    return { success: "WA uji terkirim ke " + nomor + " (catatan log gagal ditulis: " + e.toString() + ")." };
+  }
+  return { success: "WA uji terkirim ke " + nomor + ". Cek HP tujuan — pesan diawali [UJI]." };
+}
+
+// Log pengingat SPP terakhir (pelatih only). Default 20 baris.
+function getLogPengingatSpp(token, limit) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("LOG_PENGINGAT_SPP");
+    if (!sheet) return [];
+    var data = sheet.getDataRange().getDisplayValues();
+    if (data.length < 2) return [];
+    var headers = data[0];
+    var idxBulan = getColumnIndex(headers, ["BULAN TAHUN", "BULAN_TAHUN", "BULAN"]);
+    var idxPanggilan = getColumnIndex(headers, ["NAMA PANGGILAN", "NAMA_PANGGILAN"]);
+    var idxLengkap = getColumnIndex(headers, ["NAMA LENGKAP", "NAMA LENGKAP"]);
+    var idxHp = getColumnIndex(headers, ["NO HP", "NO_HP", "NOMOR HP", "NO HP"]);
+    var idxNominal = getColumnIndex(headers, ["NOMINAL"]);
+    var idxStatus = getColumnIndex(headers, ["STATUS KIRIM", "STATUS_KIRIM", "STATUS"]);
+    var idxPesan = getColumnIndex(headers, ["PESAN"]);
+    if (idxBulan === -1) idxBulan = 1;
+    if (idxPanggilan === -1) idxPanggilan = 2;
+    if (idxLengkap === -1) idxLengkap = 3;
+    if (idxHp === -1) idxHp = 4;
+    if (idxNominal === -1) idxNominal = 5;
+    if (idxStatus === -1) idxStatus = 6;
+    if (idxPesan === -1) idxPesan = 7;
+    var batas = parseInt(limit, 10);
+    if (!(batas > 0)) batas = 20;
+    var hasil = [];
+    for (var i = data.length - 1; i >= 1 && hasil.length < batas; i--) {
+      hasil.push({
+        timestamp: data[i][0],
+        bulanTahun: String(data[i][idxBulan] || ""),
+        namaPanggilan: String(data[i][idxPanggilan] || ""),
+        namaLengkap: String(data[i][idxLengkap] || ""),
+        noHp: String(data[i][idxHp] || ""),
+        nominal: data[i][idxNominal],
+        statusKirim: String(data[i][idxStatus] || ""),
+        pesan: String(data[i][idxPesan] || "")
+      });
+    }
+    return hasil;
+  } catch (err) {
+    return { error: err.toString() };
+  }
+}
+
+// Entry point trigger bulanan (TANPA token — dipanggil ScriptApp).
+// Bulan berjalan, kirim ke yang perluDiingatkan DAN belum ada
+// baris TERKIRIM di LOG untuk (atlet, bulan) itu.
+// Idempotent: jalan 2x di bulan yang sama tidak kirim dobel.
+function jalankanPengingatSppOtomatis() {
+  try {
+    var sekarang = new Date();
+    var bulanFmt = formatBulanTahunIndonesia(sekarang.getFullYear() + "-" + (sekarang.getMonth() + 1));
+    var ringkasan = denganLock(function() {
+      var hitung = hitungDaftarPengingatSpp_(bulanFmt);
+      var terkirim = 0, gagal = 0, dilewati = 0;
+      for (var i = 0; i < hitung.daftar.length; i++) {
+        var item = hitung.daftar[i];
+        if (!item.perluDiingatkan || item.sudahDiingatkan) { dilewati++; continue; }
+        var pesan = susunPesanPengingatSpp_(item, bulanFmt);
+        var statusKirim = kirimPesanFonnte(item.noHp, pesan);
+        if (String(statusKirim).indexOf("WA Terkirim") !== -1) {
+          terkirim++;
+          tulisLogPengingatSpp_(bulanFmt, item, "TERKIRIM", pesan);
+        } else {
+          gagal++;
+          tulisLogPengingatSpp_(bulanFmt, item, "GAGAL", String(statusKirim));
+        }
+      }
+      return { bulanTahun: bulanFmt, terkirim: terkirim, gagal: gagal, dilewati: dilewati, totalAtlet: hitung.daftar.length };
+    });
+    return ringkasan;
+  } catch (err) {
+    return { error: err.toString() };
+  }
+}
+
+// Internal: hapus semua trigger proyek yang handler-nya
+// "jalankanPengingatSppOtomatis". Mengembalikan jumlah yang dihapus.
+function hapusTriggerPengingatSppInternal_() {
+  var semua = ScriptApp.getProjectTriggers();
+  var dihapus = 0;
+  for (var i = 0; i < semua.length; i++) {
+    if (semua[i].getHandlerFunction() === "jalankanPengingatSppOtomatis") {
+      ScriptApp.deleteTrigger(semua[i]);
+      dihapus++;
+    }
+  }
+  return dihapus;
+}
+
+// Internal: status trigger proyek ber-handler
+// "jalankanPengingatSppOtomatis": {aktif, jumlah, trigger[]}.
+function bacaStatusTriggerPengingatSpp_() {
+  var semua = ScriptApp.getProjectTriggers();
+  var aktif = [];
+  for (var i = 0; i < semua.length; i++) {
+    if (semua[i].getHandlerFunction() === "jalankanPengingatSppOtomatis") {
+      aktif.push({ handler: semua[i].getHandlerFunction(), tipe: String(semua[i].getEventType()) });
+    }
+  }
+  return { aktif: aktif.length > 0, jumlah: aktif.length, trigger: aktif };
+}
+
+// Pengaturan jadwal + nominal pengingat (pelatih only).
+// Mengembalikan {tanggal, jam, nominal, triggerAktif, triggerDetail}.
+function getPengaturanPengingatSpp(token) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  try {
+    var pengaturan = bacaPengaturanPengingatSpp_();
+    var st = bacaStatusTriggerPengingatSpp_();
+    return { tanggal: pengaturan.tanggal, jam: pengaturan.jam, nominal: pengaturan.nominal, triggerAktif: st.aktif, triggerDetail: st };
+  } catch (err) {
+    return { error: err.toString() };
+  }
+}
+
+// Simpan pengaturan jadwal + nominal pengingat (pelatih only).
+// Validasi dulu — input tidak valid ditolak mentah-mentah, tidak ada
+// yang tersimpan setengah-setengah. Bila trigger sedang terpasang,
+// jadwal dipasang ulang otomatis dengan pengaturan baru, jadi
+// pelatih tidak perlu klik "Pasang Jadwal Otomatis" lagi.
+function simpanPengaturanPengingatSpp(token, pengaturan) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  try {
+    var saatIni = bacaPengaturanPengingatSpp_();
+    var v = validasiPengaturanPengingatSpp_(pengaturan, saatIni);
+    if (!v.ok) return { error: v.error };
+    PropertiesService.getScriptProperties().setProperty(PENGINGAT_SPP_JADWAL_KEY, JSON.stringify(v.bersih));
+    var st = bacaStatusTriggerPengingatSpp_();
+    var pesanTrigger = "Jadwal otomatis tidak aktif.";
+    if (st.aktif) {
+      try {
+        pasangTriggerDariPengaturan_(v.bersih);
+        pesanTrigger = "Jadwal otomatis dipasang ulang: tanggal " + v.bersih.tanggal.join(", ") + " jam " + v.bersih.jam + ":00.";
+      } catch (errT) {
+        return { error: "Pengaturan tersimpan, tetapi jadwal otomatis gagal dipasang ulang: " + errT.toString() + " Silakan klik \"Pasang Jadwal Otomatis\" lagi." };
+      }
+    }
+    var stBaru = bacaStatusTriggerPengingatSpp_();
+    return { success: "Pengaturan pengingat SPP disimpan (tanggal " + v.bersih.tanggal.join(", ") + ", jam " + v.bersih.jam + ":00, nominal Rp " + v.bersih.nominal.toLocaleString("id-ID") + "). " + pesanTrigger, pengaturan: v.bersih, triggerAktif: stBaru.aktif, triggerDetail: stBaru };
+  } catch (err) {
+    return { error: err.toString() };
+  }
+}
+
+// Internal: hapus trigger lama + pasang satu trigger per tanggal
+// pada jam yang diatur. Dipakai pasangTriggerPengingatSpp dan
+// simpanPengaturanPengingatSpp (pasang ulang otomatis).
+function pasangTriggerDariPengaturan_(pengaturan) {
+  hapusTriggerPengingatSppInternal_();
+  for (var i = 0; i < pengaturan.tanggal.length; i++) {
+    ScriptApp.newTrigger("jalankanPengingatSppOtomatis").timeBased().onMonthDay(pengaturan.tanggal[i]).atHour(pengaturan.jam).create();
+  }
+  return pengaturan.tanggal.length;
+}
+
+// Pasang jadwal otomatis (pelatih only): satu trigger per tanggal
+// yang diatur, pada jam yang diatur. Trigger lama dengan handler
+// yang sama dihapus dulu (anti-dobel).
+function pasangTriggerPengingatSpp(token) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  try {
+    var pengaturan = bacaPengaturanPengingatSpp_();
+    var jumlah = pasangTriggerDariPengaturan_(pengaturan);
+    return { success: "Jadwal otomatis pengingat SPP dipasang: tanggal " + pengaturan.tanggal.join(", ") + " setiap bulan, jam " + pengaturan.jam + ":00 (" + jumlah + " trigger).", pengaturan: pengaturan };
+  } catch (err) {
+    return { error: err.toString() };
+  }
+}
+
+// Hapus jadwal otomatis (pelatih only).
+function hapusTriggerPengingatSpp(token) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  try {
+    var jumlah = hapusTriggerPengingatSppInternal_();
+    return { success: "Jadwal otomatis pengingat SPP dihapus (" + jumlah + " trigger)." };
+  } catch (err) {
+    return { error: err.toString() };
+  }
+}
+
+// Status jadwal otomatis (pelatih only). Menyertakan tanggal, jam,
+// dan nominal dari pengaturan tersimpan + jumlah trigger terpasang.
+function getStatusTriggerPengingatSpp(token) {
+  var sesi;
+  try {
+    sesi = butuhPeran(token, ["pelatih"]);
+  } catch (e) {
+    return { error: e.message };
+  }
+  try {
+    var pengaturan = bacaPengaturanPengingatSpp_();
+    var st = bacaStatusTriggerPengingatSpp_();
+    return { aktif: st.aktif, jumlah: st.jumlah, trigger: st.trigger, tanggal: pengaturan.tanggal, jam: pengaturan.jam, nominal: pengaturan.nominal };
+  } catch (err) {
+    return { error: err.toString() };
+  }
+}
+
+// ====================================================
 // MODUL REGISTRASI ATLET BARU
 // ====================================================
 
@@ -2722,9 +3401,15 @@ function cekKesiapanV12() {
 // Frontend di GitHub Pages memanggil backend lewat HTTP POST ke /exec
 // dengan body JSON {fn, args} dan menerima {ok:true,result} atau
 // {ok:false,error}. Hanya fungsi yang ada di FUNGSI_DIIZINKAN yang boleh
-// dipanggil — yaitu tepat 39 fungsi yang dipakai frontend v13 (13 lewat
-// panggilServer + 24 lewat panggilan langsung, 1 irisan: getAthleteData;
-// ditambah tambahEventLomba, getFotoAtletMap, dan resetPasswordWali).
+// dipanggil — yaitu tepat 48 fungsi yang dipakai frontend v13.1
+// (39 fungsi v13 + 9 fungsi pengingat SPP v13.1:
+// getDaftarPengingatSpp, kirimPengingatSpp, kirimPengingatSppUji,
+// getLogPengingatSpp,
+// pasangTriggerPengingatSpp, hapusTriggerPengingatSpp,
+// getStatusTriggerPengingatSpp, getPengaturanPengingatSpp,
+// simpanPengaturanPengingatSpp). Fungsi trigger
+// jalankanPengingatSppOtomatis TIDAK ada di map ini — ia dipanggil
+// langsung oleh ScriptApp (time-based trigger), bukan lewat doPost.
 // Helper internal (validasiToken, bolehAksesAtlet, dsb.) TIDAK diekspos.
 // doGet dan semua fungsi lama di atas TIDAK diubah.
 // ====================================================
@@ -2735,31 +3420,40 @@ var FUNGSI_DIIZINKAN = {
   getDaftarEventLomba: getDaftarEventLomba,
   getDaftarIzinLatihan: getDaftarIzinLatihan,
   getDaftarKonfirmasiSppCoach: getDaftarKonfirmasiSppCoach,
+  getDaftarPengingatSpp: getDaftarPengingatSpp,
   getFotoAtletMap: getFotoAtletMap,
   getHistoriSppSpesifikAtlet: getHistoriSppSpesifikAtlet,
   getHistoryPresensiSpesifikAtlet: getHistoryPresensiSpesifikAtlet,
   getJadwalBukuAcara: getJadwalBukuAcara,
+  getLogPengingatSpp: getLogPengingatSpp,
   getNamaAtletList: getNamaAtletList,
+  getPengaturanPengingatSpp: getPengaturanPengingatSpp,
   getRekapMatriksSppAdmin: getRekapMatriksSppAdmin,
   getRekapPendaftaranLomba: getRekapPendaftaranLomba,
   getRekapPresensiAnalisis: getRekapPresensiAnalisis,
   getStatistikPresensiAtlet: getStatistikPresensiAtlet,
+  getStatusTriggerPengingatSpp: getStatusTriggerPengingatSpp,
   hapusAtlet: hapusAtlet,
   hapusBukuAcara: hapusBukuAcara,
   hapusEventA3: hapusEventA3,
   hapusPendaftaranAtlet: hapusPendaftaranAtlet,
   hapusPresensi: hapusPresensi,
   hapusSpp: hapusSpp,
+  hapusTriggerPengingatSpp: hapusTriggerPengingatSpp,
   hapusWaktuLatihan: hapusWaktuLatihan,
   hitungPacingTarget: hitungPacingTarget,
   kirimIzinLatihanWali: kirimIzinLatihanWali,
   kirimNotifikasiWaTagihanFonnte: kirimNotifikasiWaTagihanFonnte,
+  kirimPengingatSpp: kirimPengingatSpp,
+  kirimPengingatSppUji: kirimPengingatSppUji,
+  pasangTriggerPengingatSpp: pasangTriggerPengingatSpp,
   prosesLogin: prosesLogin,
   prosesVerifikasiSppCoach: prosesVerifikasiSppCoach,
   resetPasswordWali: resetPasswordWali,
   simpanAnalisisBukuAcara: simpanAnalisisBukuAcara,
   simpanCatatanKarakter: simpanCatatanKarakter,
   simpanPendaftaranLomba: simpanPendaftaranLomba,
+  simpanPengaturanPengingatSpp: simpanPengaturanPengingatSpp,
   simpanPresensiSatuAtlet: simpanPresensiSatuAtlet,
   simpanProfilAtlet: simpanProfilAtlet,
   simpanRegistrasiAtletBaru: simpanRegistrasiAtletBaru,
